@@ -109,15 +109,15 @@ export const CardForm: React.FC<CardFormProps> = ({
   };
 
   return (
-    <div className="bg-[#0b1224] border border-[#1d2940] rounded-2xl p-5 shadow-xl space-y-4">
+    <div className="bg-white dark:bg-[#0b1224] border border-slate-200 dark:border-[#1d2940] rounded-2xl p-5 shadow-lg dark:shadow-xl space-y-4 transition-colors duration-200">
       {/* Header with Title & Clear Button */}
-      <div className="flex items-start justify-between border-b border-[#1d2940] pb-3.5">
+      <div className="flex items-start justify-between border-b border-slate-100 dark:border-[#1d2940] pb-3.5">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#ff9800] inline-block shrink-0 shadow-sm shadow-orange-500/50" />
             Enter Details
           </h2>
-          <p className="text-xs text-[#9aa3b5] mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-[#9aa3b5] mt-0.5">
             Fill in your details below to see live card preview
           </p>
         </div>
@@ -125,7 +125,7 @@ export const CardForm: React.FC<CardFormProps> = ({
         <button
           type="button"
           onClick={onClear}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#dfe2e8] hover:text-white bg-[#172238] hover:bg-[#26344d] border border-[#26344d] rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#ff9800] outline-none"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-[#dfe2e8] hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#172238] dark:hover:bg-[#26344d] border border-slate-200 dark:border-[#26344d] rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#ff9800] outline-none cursor-pointer"
           title="Clear form inputs"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -143,7 +143,7 @@ export const CardForm: React.FC<CardFormProps> = ({
 
         {/* Name Input */}
         <div className="space-y-1">
-          <label htmlFor="name-input" className="block text-xs font-semibold text-[#dfe2e8]">
+          <label htmlFor="name-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
             Name <span className="text-[#ff9800]">*</span>
           </label>
           <input
@@ -155,18 +155,18 @@ export const CardForm: React.FC<CardFormProps> = ({
             value={data.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="e.g. Rahul Sharma"
-            className={`w-full h-10 px-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.name ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
+            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
+              errors.name ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
             }`}
           />
           {errors.name && (
-            <p className="text-xs text-red-400 mt-1 font-medium">{errors.name}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.name}</p>
           )}
         </div>
 
         {/* ID Number Input */}
         <div className="space-y-1">
-          <label htmlFor="id-input" className="block text-xs font-semibold text-[#dfe2e8]">
+          <label htmlFor="id-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
             ID No. <span className="text-[#ff9800]">*</span>
           </label>
           <input
@@ -178,19 +178,19 @@ export const CardForm: React.FC<CardFormProps> = ({
             value={data.idNumber}
             onChange={(e) => handleChange('idNumber', e.target.value)}
             placeholder="IND-2026-7890"
-            className={`w-full h-10 px-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.idNumber ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
+            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
+              errors.idNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
             }`}
           />
           {errors.idNumber && (
-            <p className="text-xs text-red-400 mt-1 font-medium">{errors.idNumber}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.idNumber}</p>
           )}
         </div>
 
         {/* Phone Number Input */}
         <div className="space-y-1">
-          <label htmlFor="phone-input" className="block text-xs font-semibold text-[#dfe2e8]">
-            Phone Number <span className="text-[#9aa3b5] font-normal">(Optional / 10 Digits)</span>
+          <label htmlFor="phone-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
+            Phone Number <span className="text-slate-500 dark:text-[#9aa3b5] font-normal">(Optional / 10 Digits)</span>
           </label>
           <input
             ref={phoneInputRef}
@@ -205,18 +205,18 @@ export const CardForm: React.FC<CardFormProps> = ({
               handleChange('phoneNumber', val);
             }}
             placeholder="e.g. 9876543210 (10 digits)"
-            className={`w-full h-10 px-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.phoneNumber ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
+            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
+              errors.phoneNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
             }`}
           />
           {errors.phoneNumber && (
-            <p className="text-xs text-red-400 mt-1 font-medium">{errors.phoneNumber}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.phoneNumber}</p>
           )}
         </div>
 
         {/* Address Input */}
         <div className="space-y-1">
-          <label htmlFor="address-input" className="block text-xs font-semibold text-[#dfe2e8]">
+          <label htmlFor="address-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
             Address <span className="text-[#ff9800]">*</span>
           </label>
           <textarea
@@ -228,12 +228,12 @@ export const CardForm: React.FC<CardFormProps> = ({
             value={data.address}
             onChange={(e) => handleChange('address', e.target.value)}
             placeholder="e.g. New Delhi, Delhi"
-            className={`w-full p-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none resize-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.address ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
+            className={`w-full p-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none resize-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
+              errors.address ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
             }`}
           />
           {errors.address && (
-            <p className="text-xs text-red-400 mt-1 font-medium">{errors.address}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.address}</p>
           )}
         </div>
       </div>

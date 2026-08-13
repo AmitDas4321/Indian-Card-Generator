@@ -67,7 +67,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
       type="button"
       onClick={handleDownload}
       disabled={isGenerating}
-      className="w-full py-3.5 px-6 rounded-xl font-bold text-white text-base sm:text-lg bg-gradient-to-r from-[#ff9800] via-[#f57c00] to-[#e65100] hover:from-[#ffa726] hover:via-[#fb8c00] hover:to-[#f57c00] active:scale-[0.99] shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#020817] focus-visible:ring-[#ff9800] outline-none disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
+      className="w-full py-3.5 px-6 rounded-xl font-bold text-white text-base sm:text-lg bg-gradient-to-r from-[#ff9800] via-[#f57c00] to-[#e65100] hover:from-[#ffa726] hover:via-[#fb8c00] hover:to-[#f57c00] active:scale-[0.99] shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 dark:focus-visible:ring-offset-[#020817] focus-visible:ring-[#ff9800] outline-none disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
     >
       {isGenerating ? (
         <>
