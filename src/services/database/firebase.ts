@@ -3,11 +3,6 @@ import { CertificateRecord, DatabaseAdapter, DatabaseProvider } from './types';
 export class FirebaseAdapter implements DatabaseAdapter {
   readonly name: DatabaseProvider = 'firebase';
   private memoryStore = new Map<string, CertificateRecord>();
-  private memoryConfig = new Map<string, any>();
-
-  constructor() {
-    this.memoryConfig.set('digitLength', 4);
-  }
 
   private getRtdbUrl(): string | null {
     const envUrl = process.env.FIREBASE_DATABASE_URL || process.env.VITE_FIREBASE_DATABASE_URL;
@@ -100,7 +95,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     // Store in memory cache
     this.memoryStore.set(cleanId, formattedRecord);
 
-    // Save to Firebase RTDB
+    // Save to Firebase RTDB under cards/${cleanId}.json
     const endpoint = this.getFirebaseEndpoint(`cards/${cleanId}.json`);
     if (endpoint) {
       try {
@@ -165,40 +160,6 @@ export class FirebaseAdapter implements DatabaseAdapter {
       }
     }
     return true;
-  }
-
-  async getStoredDigitLength(): Promise<number> {
-    const endpoint = this.getFirebaseEndpoint('system/digitLength.json');
-    if (endpoint) {
-      try {
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const val = await res.json();
-          if (typeof val === 'number' && val >= 4) {
-            return val;
-          }
-        }
-      } catch (err) {
-        console.warn('[Firebase] Error fetching digitLength:', err);
-      }
-    }
-    return this.memoryConfig.get('digitLength') || 4;
-  }
-
-  async setStoredDigitLength(length: number): Promise<void> {
-    this.memoryConfig.set('digitLength', length);
-    const endpoint = this.getFirebaseEndpoint('system/digitLength.json');
-    if (endpoint) {
-      try {
-        await fetch(endpoint, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(length),
-        });
-      } catch (err) {
-        console.warn('[Firebase] Error saving digitLength:', err);
-      }
-    }
   }
 
   async fetchAllUsedSuffixesForLength(digitLength: number): Promise<Set<number>> {

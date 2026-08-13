@@ -19,41 +19,30 @@ export class MongoDBAdapter implements DatabaseAdapter {
     return this.db;
   }
 
-  private async getCertificatesCollection(): Promise<Collection<CertificateRecord>> {
+  private async getCardsCollection(): Promise<Collection<CertificateRecord>> {
     const db = await this.getDb();
-    return db.collection<CertificateRecord>('certificates');
-  }
-
-  private async getSystemConfigCollection(): Promise<Collection<{ _id: string; value: any }>> {
-    const db = await this.getDb();
-    return db.collection<{ _id: string; value: any }>('system_config');
+    return db.collection<CertificateRecord>('cards');
   }
 
   async init(): Promise<void> {
     if (this.isInitialized) return;
 
     try {
-      const certificatesCol = await this.getCertificatesCollection();
+      const cardsCol = await this.getCardsCollection();
       // Ensure unique index on `id`
-      await certificatesCol.createIndex({ id: 1 }, { unique: true });
-
-      const configCol = await this.getSystemConfigCollection();
-      const existingConfig = await configCol.findOne({ _id: 'digitLength' });
-      if (!existingConfig) {
-        await configCol.insertOne({ _id: 'digitLength', value: 4 });
-      }
+      await cardsCol.createIndex({ id: 1 }, { unique: true });
 
       this.isInitialized = true;
-      console.info('[Database: MongoDB] Successfully connected and initialized MongoDB collections & indexes.');
+      console.info('[Database: MongoDB] Connected and initialized `cards` collection.');
     } catch (err) {
-      console.warn('[Database: MongoDB] Could not connect or initialize MongoDB collections:', err);
+      console.warn('[Database: MongoDB] Could not connect or initialize MongoDB `cards` collection:', err);
     }
   }
 
   async certificateExists(id: string): Promise<boolean> {
     try {
       const cleanId = id.trim().toUpperCase();
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       const doc = await collection.findOne({ id: cleanId }, { projection: { id: 1 } });
       return doc !== null;
     } catch (err) {
@@ -65,7 +54,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
   async getCertificateById(id: string): Promise<CertificateRecord | null> {
     try {
       const cleanId = id.trim().toUpperCase();
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       const doc = await collection.findOne({ id: cleanId }, { projection: { _id: 0 } });
       if (doc) {
         return {
@@ -79,7 +68,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
         };
       }
     } catch (err) {
-      console.error(`[MongoDB] Error fetching certificate ${id}:`, err);
+      console.error(`[MongoDB] Error fetching card ${id}:`, err);
     }
     return null;
   }
@@ -97,7 +86,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
     };
 
     try {
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       await collection.insertOne({ ...formattedRecord } as any);
     } catch (err: any) {
       // MongoDB duplicate key error code 11000
@@ -115,7 +104,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
   async updateCertificate(id: string, updates: Partial<CertificateRecord>): Promise<CertificateRecord | null> {
     const cleanId = id.trim().toUpperCase();
     try {
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       const safeUpdates = { ...updates };
       delete (safeUpdates as any)._id;
       delete safeUpdates.id; // Preserve ID
@@ -127,7 +116,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
       );
       return result ? (result as CertificateRecord) : null;
     } catch (err) {
-      console.error(`[MongoDB] Error updating certificate ${cleanId}:`, err);
+      console.error(`[MongoDB] Error updating card ${cleanId}:`, err);
       return null;
     }
   }
@@ -135,45 +124,19 @@ export class MongoDBAdapter implements DatabaseAdapter {
   async deleteCertificate(id: string): Promise<boolean> {
     const cleanId = id.trim().toUpperCase();
     try {
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       const result = await collection.deleteOne({ id: cleanId });
       return result.deletedCount > 0;
     } catch (err) {
-      console.error(`[MongoDB] Error deleting certificate ${cleanId}:`, err);
+      console.error(`[MongoDB] Error deleting card ${cleanId}:`, err);
       return false;
-    }
-  }
-
-  async getStoredDigitLength(): Promise<number> {
-    try {
-      const configCol = await this.getSystemConfigCollection();
-      const doc = await configCol.findOne({ _id: 'digitLength' });
-      if (doc && typeof doc.value === 'number' && doc.value >= 4) {
-        return doc.value;
-      }
-    } catch (err) {
-      console.warn('[MongoDB] Error reading digitLength:', err);
-    }
-    return 4;
-  }
-
-  async setStoredDigitLength(length: number): Promise<void> {
-    try {
-      const configCol = await this.getSystemConfigCollection();
-      await configCol.updateOne(
-        { _id: 'digitLength' },
-        { $set: { value: length } },
-        { upsert: true }
-      );
-    } catch (err) {
-      console.warn('[MongoDB] Error saving digitLength:', err);
     }
   }
 
   async fetchAllUsedSuffixesForLength(digitLength: number): Promise<Set<number>> {
     const usedSet = new Set<number>();
     try {
-      const collection = await this.getCertificatesCollection();
+      const collection = await this.getCardsCollection();
       const cursor = collection.find({}, { projection: { id: 1, _id: 0 } });
       const docs = await cursor.toArray();
       for (const doc of docs) {
@@ -184,7 +147,7 @@ export class MongoDBAdapter implements DatabaseAdapter {
         }
       }
     } catch (err) {
-      console.warn('[MongoDB] Error fetching certificate IDs:', err);
+      console.warn('[MongoDB] Error fetching card IDs:', err);
     }
     return usedSet;
   }

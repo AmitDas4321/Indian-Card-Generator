@@ -18,8 +18,6 @@ export interface DatabaseAdapter {
   createCertificate(record: CertificateRecord): Promise<CertificateRecord>;
   updateCertificate(id: string, updates: Partial<CertificateRecord>): Promise<CertificateRecord | null>;
   deleteCertificate(id: string): Promise<boolean>;
-  getStoredDigitLength(): Promise<number>;
-  setStoredDigitLength(length: number): Promise<void>;
   fetchAllUsedSuffixesForLength(digitLength: number): Promise<Set<number>>;
   close?(): Promise<void>;
 }

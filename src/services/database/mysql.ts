@@ -16,7 +16,7 @@ export class MySQLAdapter implements DatabaseAdapter {
 
       this.pool = mysql.createPool({
         host,
-        port,
+        port: isNaN(port) ? 3306 : port,
         user,
         password,
         database,
@@ -36,12 +36,11 @@ export class MySQLAdapter implements DatabaseAdapter {
     try {
       const pool = this.getPool();
 
-      // Test connection
+      // Test connection and ensure cards table exists
       const connection = await pool.getConnection();
       try {
-        // Create certificates table with LONGTEXT for Base64 photo storage
         await connection.execute(`
-          CREATE TABLE IF NOT EXISTS certificates (
+          CREATE TABLE IF NOT EXISTS cards (
             id VARCHAR(64) PRIMARY KEY,
             name VARCHAR(255) NOT NULL DEFAULT '',
             address VARCHAR(500) NOT NULL DEFAULT '',
@@ -52,27 +51,13 @@ export class MySQLAdapter implements DatabaseAdapter {
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
 
-        // Create system configuration table for dynamic metadata (e.g. digitLength)
-        await connection.execute(`
-          CREATE TABLE IF NOT EXISTS system_config (
-            config_key VARCHAR(64) PRIMARY KEY,
-            config_value VARCHAR(255) NOT NULL
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-        `);
-
-        // Initialize default digitLength if not exists
-        await connection.execute(`
-          INSERT IGNORE INTO system_config (config_key, config_value)
-          VALUES ('digitLength', '4');
-        `);
-
         this.isInitialized = true;
-        console.info('[Database: MySQL] Successfully connected and initialized database schema.');
+        console.info('[Database: MySQL] Connected and initialized `cards` table.');
       } finally {
         connection.release();
       }
     } catch (err) {
-      console.warn('[Database: MySQL] Could not initialize MySQL database schema:', err);
+      console.warn('[Database: MySQL] Could not connect or initialize `cards` table:', err);
     }
   }
 
@@ -83,7 +68,7 @@ export class MySQLAdapter implements DatabaseAdapter {
     try {
       const pool = this.getPool();
       const [rows] = await pool.execute<RowDataPacket[]>(
-        'SELECT id FROM certificates WHERE id = ? LIMIT 1',
+        'SELECT id FROM cards WHERE id = ? LIMIT 1',
         [cleanId]
       );
       return Array.isArray(rows) && rows.length > 0;
@@ -100,7 +85,7 @@ export class MySQLAdapter implements DatabaseAdapter {
     try {
       const pool = this.getPool();
       const [rows] = await pool.execute<RowDataPacket[]>(
-        'SELECT id, name, address, phone, photo, status, createdAt FROM certificates WHERE id = ? LIMIT 1',
+        'SELECT id, name, address, phone, photo, status, createdAt FROM cards WHERE id = ? LIMIT 1',
         [cleanId]
       );
 
@@ -117,7 +102,7 @@ export class MySQLAdapter implements DatabaseAdapter {
         };
       }
     } catch (err) {
-      console.error(`[MySQL] Error fetching certificate ${cleanId}:`, err);
+      console.error(`[MySQL] Error fetching card ${cleanId}:`, err);
     }
 
     return null;
@@ -140,7 +125,7 @@ export class MySQLAdapter implements DatabaseAdapter {
 
     try {
       await pool.execute(
-        `INSERT INTO certificates (id, name, address, phone, photo, status, createdAt)
+        `INSERT INTO cards (id, name, address, phone, photo, status, createdAt)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           formattedRecord.id,
@@ -177,7 +162,7 @@ export class MySQLAdapter implements DatabaseAdapter {
 
     const pool = this.getPool();
     await pool.execute(
-      `UPDATE certificates
+      `UPDATE cards
        SET name = ?, address = ?, phone = ?, photo = ?, status = ?
        WHERE id = ?`,
       [
@@ -198,43 +183,11 @@ export class MySQLAdapter implements DatabaseAdapter {
     const cleanId = id.trim().toUpperCase();
     try {
       const pool = this.getPool();
-      const [result]: any = await pool.execute('DELETE FROM certificates WHERE id = ?', [cleanId]);
+      const [result]: any = await pool.execute('DELETE FROM cards WHERE id = ?', [cleanId]);
       return result.affectedRows > 0;
     } catch (err) {
-      console.error(`[MySQL] Error deleting certificate ${cleanId}:`, err);
+      console.error(`[MySQL] Error deleting card ${cleanId}:`, err);
       return false;
-    }
-  }
-
-  async getStoredDigitLength(): Promise<number> {
-    await this.init();
-    try {
-      const pool = this.getPool();
-      const [rows] = await pool.execute<RowDataPacket[]>(
-        "SELECT config_value FROM system_config WHERE config_key = 'digitLength' LIMIT 1"
-      );
-      if (Array.isArray(rows) && rows.length > 0) {
-        const val = parseInt(rows[0].config_value, 10);
-        if (!isNaN(val) && val >= 4) return val;
-      }
-    } catch (err) {
-      console.warn('[MySQL] Error reading digitLength:', err);
-    }
-    return 4;
-  }
-
-  async setStoredDigitLength(length: number): Promise<void> {
-    await this.init();
-    try {
-      const pool = this.getPool();
-      await pool.execute(
-        `INSERT INTO system_config (config_key, config_value)
-         VALUES ('digitLength', ?)
-         ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)`,
-        [String(length)]
-      );
-    } catch (err) {
-      console.warn('[MySQL] Error saving digitLength:', err);
     }
   }
 
@@ -243,7 +196,7 @@ export class MySQLAdapter implements DatabaseAdapter {
     const usedSet = new Set<number>();
     try {
       const pool = this.getPool();
-      const [rows] = await pool.execute<RowDataPacket[]>('SELECT id FROM certificates');
+      const [rows] = await pool.execute<RowDataPacket[]>('SELECT id FROM cards');
       if (Array.isArray(rows)) {
         for (const row of rows) {
           const certId = String(row.id || '');
@@ -254,7 +207,7 @@ export class MySQLAdapter implements DatabaseAdapter {
         }
       }
     } catch (err) {
-      console.warn('[MySQL] Error fetching all certificate IDs:', err);
+      console.warn('[MySQL] Error fetching card IDs:', err);
     }
     return usedSet;
   }

@@ -102,11 +102,11 @@ export async function deleteCertificate(id: string): Promise<boolean> {
 
 /**
  * Atomically generates a unique random certificate ID that does not exist in the database.
- * Supports expansion from 4 digits (IND-2026-####) to 5+ digits when capacity is reached.
+ * Starts with 4 digits (IND-2026-####) and seamlessly scales if needed without external config tables.
  */
 export async function generateUniqueCertificateId(): Promise<string> {
   const db = getDatabase();
-  let digitLength = await db.getStoredDigitLength();
+  let digitLength = 4;
 
   while (true) {
     const maxCapacity = Math.pow(10, digitLength);
@@ -123,13 +123,12 @@ export async function generateUniqueCertificateId(): Promise<string> {
       }
     }
 
-    // High collision frequency: fetch all existing cards to check if current digit length is exhausted
+    // High collision frequency: fetch all existing cards for this digit length to check if exhausted
     const usedSuffixes = await db.fetchAllUsedSuffixesForLength(digitLength);
 
     if (usedSuffixes.size >= maxCapacity) {
       // All combinations for current digit length are exhausted! Switch to next digit length.
       digitLength++;
-      await db.setStoredDigitLength(digitLength);
       continue;
     }
 
@@ -143,7 +142,6 @@ export async function generateUniqueCertificateId(): Promise<string> {
 
     if (unusedNums.length === 0) {
       digitLength++;
-      await db.setStoredDigitLength(digitLength);
       continue;
     }
 
@@ -161,12 +159,7 @@ export async function generateUniqueCertificateId(): Promise<string> {
  */
 export async function generatePreviewCandidateId(): Promise<string> {
   const db = getDatabase();
-  let digitLength = 4;
-  try {
-    digitLength = await db.getStoredDigitLength();
-  } catch {
-    digitLength = 4;
-  }
+  const digitLength = 4;
   const maxCapacity = Math.pow(10, digitLength);
 
   for (let attempt = 0; attempt < 20; attempt++) {

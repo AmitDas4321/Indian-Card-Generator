@@ -69,7 +69,7 @@ The card creation and verification process is intuitive, responsive, and secure:
  ⚡ Real-Time HTML5 Canvas Live Rendering (1600 × 1000 px)
                │
                ▼
- 🔐 HMAC-SHA256 Signed API Sync to Chosen Database Provider
+ 🔐 HMAC-SHA256 Signed API Sync to Active Database Provider
     (Firebase Realtime Database ⇄ MySQL ⇄ MongoDB)
                │
                ▼
@@ -83,12 +83,13 @@ The card creation and verification process is intuitive, responsive, and secure:
 
 # ✨ Features
 
-### 🗄️ Multi-Database Abstraction Layer
-Switch between enterprise database providers simply by setting `DATABASE_PROVIDER`:
-* 🔥 **Firebase Realtime Database** (`DATABASE_PROVIDER=firebase`): Cloud-hosted real-time persistence with memory fallback.
-* 🐬 **MySQL** (`DATABASE_PROVIDER=mysql`): Connection pooling via `mysql2/promise`, automatic table migrations, parameterized prepared statements, and `LONGTEXT` Base64 image storage.
-* 🍃 **MongoDB** (`DATABASE_PROVIDER=mongodb`): Connection pooling with `MongoClient`, auto-indexed unique `id` collection, and flexible document persistence.
-* 🛡️ **Zero Frontend Exposure**: Database credentials, connection strings, and passwords remain strictly on the backend.
+### 🗄️ Multi-Database Support (Plug-and-Play)
+Switch between enterprise database engines without any frontend modifications simply by setting the `DATABASE_PROVIDER` environment variable:
+* 🔥 **Firebase Realtime Database** (`DATABASE_PROVIDER=firebase`): Cloud-hosted real-time persistence under `/cards/${id}.json` with automatic in-memory fallback for local development.
+* 🐬 **MySQL** (`DATABASE_PROVIDER=mysql`): Connection pooling via `mysql2/promise`, automatic table initialization for the `cards` table, parameterized prepared statements, and `LONGTEXT` storage for Base64 photos.
+* 🍃 **MongoDB** (`DATABASE_PROVIDER=mongodb`): Connection pooling with `MongoClient`, auto-indexed unique `id` on the `cards` collection, and native document storage.
+* 🎯 **Direct Data Storage**: Clean architecture storing all records directly in the `cards` table/collection with zero unnecessary metadata or system configuration tables.
+* 🛡️ **Zero Frontend Exposure**: Database credentials, connection strings, and passwords remain strictly isolated on the backend server.
 
 ### 🎨 Design & Canvas Rendering
 * 🇮🇳 **Patriotic Indian Aesthetic**: Saffron (`#FF9933`), White (`#FFFFFF`), Navy (`#060B18`), and Green (`#138808`) palette with golden ornamental accents.
@@ -109,7 +110,7 @@ Switch between enterprise database providers simply by setting `DATABASE_PROVIDE
 * 🔒 **Constant-Time Verification**: Timing attack prevention using `crypto.timingSafeEqual`.
 * 🛡️ **API Key Validation**: Server-side validation via `X-API-Key`.
 * 🚦 **IP Rate Limiting**: Built-in sliding window rate limiter (60 requests/minute per IP) with standard `X-RateLimit-*` headers.
-* 🚫 **Conflict-Safe ID Allocation**: Prevents ID collisions by returning `409 Conflict` (`{"error":"ID already exists"}`) if a duplicate ID is submitted.
+* 🚫 **Conflict-Safe ID Allocation**: Prevents ID collisions by returning `409 Conflict` (`{"error":"ID already exists"}`) if a duplicate ID is submitted across any database engine.
 
 ---
 
@@ -164,6 +165,48 @@ White           #FFFFFF
 
 ---
 
+# 🗄️ Multi-Database Architecture
+
+The backend utilizes a clean Adapter pattern allowing effortless switching between database engines. All database operations strictly target the `cards` entity.
+
+```text
+               ┌───────────────────────────────┐
+               │    Client App / API Router    │
+               └───────────────┬───────────────┘
+                               │
+               ┌───────────────▼───────────────┐
+               │   Database Abstraction Layer  │
+               │    (src/services/database)    │
+               └───────┬───────┬───────┬───────┘
+                       │       │       │
+       DATABASE_PROVIDER="firebase"    │       DATABASE_PROVIDER="mongodb"
+                       │       │       │
+       ┌───────────────▼┐      │      ┌▼──────────────┐
+       │FirebaseAdapter │      │      │MongoDBAdapter │
+       │ (REST Endpoint)│      │      │ (MongoClient) │
+       │  /cards/{id}   │      │      │ cards.find()  │
+       └────────────────┘      │      └───────────────┘
+                               │
+                      DATABASE_PROVIDER="mysql"
+                               │
+                       ┌───────▼────────┐
+                       │  MySQLAdapter  │
+                       │(mysql2/promise)│
+                       │  SELECT/INSERT │
+                       │  FROM `cards`  │
+                       └────────────────┘
+```
+
+### Database Comparison
+
+| Provider | Config Value | Storage Structure | Features |
+| :--- | :--- | :--- | :--- |
+| **Firebase RTDB** | `firebase` | Realtime node `/cards/{id}.json` | Cloud real-time sync, zero server setup, memory fallback |
+| **MySQL** | `mysql` | Table `cards` | Connection pooling, ACID compliance, `LONGTEXT` image storage |
+| **MongoDB** | `mongodb` | Collection `cards` | Document storage, unique index on `id`, connection reuse |
+
+---
+
 # 🔐 API & Security Architecture
 
 ### 1. Canonical Signing Format
@@ -184,10 +227,10 @@ ${METHOD}:${PATH}:${X-Timestamp}:${X-Nonce}:${REQUEST_BODY}
 | :--- | :--- | :--- | :---: |
 | `GET` | `/api/health` | Service health & active database provider check | No |
 | `GET` | `/api/next-id` | Retrieves the next preview unique ID (`IND-2026-####`) | Yes |
-| `POST` | `/api/certificates` | Stores and signs a new certificate record (returns `409` on duplicate ID) | Yes |
-| `GET` | `/api/certificates/:id` | Fetches a certificate record by ID for verification | Yes |
-| `PUT` | `/api/certificates/:id` | Updates a certificate record | Yes |
-| `DELETE` | `/api/certificates/:id` | Deletes a certificate record | Yes |
+| `POST` | `/api/certificates` | Stores and signs a new certificate record in the active database (returns `409` on duplicate ID) | Yes |
+| `GET` | `/api/certificates/:id` | Fetches a card record by ID for verification | Yes |
+| `PUT` | `/api/certificates/:id` | Updates a card record in the active database | Yes |
+| `DELETE` | `/api/certificates/:id` | Deletes a card record from the active database | Yes |
 
 ---
 
@@ -196,31 +239,29 @@ ${METHOD}:${PATH}:${X-Timestamp}:${X-Nonce}:${REQUEST_BODY}
 Configure these variables in your `.env` file (refer to `.env.example`):
 
 ```env
-# Used for self-referential links, OAuth callbacks, and API endpoints.
+# Application
 APP_URL=https://example.com
-
-# Verification Base Domain (used for QR code generation and verification links)
 VERIFICATION_BASE_URL=https://indian-card-verify.blueorbitdevs.workers.dev
 
-# Database Selection: 'firebase' | 'mysql' | 'mongodb'
+# Select database: 'firebase' | 'mysql' | 'mongodb'
 DATABASE_PROVIDER=firebase
 
-# Firebase Realtime Database
-FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+# Firebase
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com/
 FIREBASE_DATABASE_SECRET=your_firebase_database_secret
 
 # MySQL
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
-MYSQL_DATABASE=tiranga_cards
-MYSQL_USER=root
+MYSQL_DATABASE=indian_card
+MYSQL_USER=indian_card
 MYSQL_PASSWORD=your_mysql_password
 
 # MongoDB
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DATABASE=tiranga_cards
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/
+MONGODB_DATABASE=Indian-Card-Generator
 
-# API Security (HMAC-SHA256 & API Key)
+# API Security
 API_KEY=7f9c2e4a8b1d6f3c9a7e5b2d8f4c1a6e0d3b9c7f2a5e8d1
 API_SECRET_KEY=Q8vN4xZ7pL2mK9rT5wY3cH6sJ1dF8aB0nG4uE7iP2oR9tV6x
 ```
@@ -246,7 +287,7 @@ npm install
 
 ```bash
 cp .env.example .env
-# Edit .env and supply your credentials and DATABASE_PROVIDER
+# Edit .env and supply your credentials and DATABASE_PROVIDER (firebase | mysql | mongodb)
 ```
 
 ### 4. Start Development Server
@@ -305,10 +346,10 @@ Indian-Card-Generator/
 │   ├── services/
 │   │   ├── database/             # Multi-Database Abstraction Layer
 │   │   │   ├── types.ts          # Common Database Adapter interfaces
-│   │   │   ├── firebase.ts       # Firebase Realtime Database Adapter
-│   │   │   ├── mysql.ts          # MySQL Connection Pool Adapter & Migration
-│   │   │   ├── mongodb.ts        # MongoDB MongoClient Adapter & Indexes
-│   │   │   └── index.ts          # Unified Database Service Provider & ID Engine
+│   │   │   ├── firebase.ts       # Firebase Realtime Database Adapter (/cards/{id})
+│   │   │   ├── mysql.ts          # MySQL Connection Pool Adapter (`cards` table)
+│   │   │   ├── mongodb.ts        # MongoDB MongoClient Adapter (`cards` collection)
+│   │   │   └── index.ts          # Unified Database Provider & ID Generator Engine
 │   │   ├── certificateService.ts # Client API connector to backend
 │   │   ├── firebaseCertificate.ts# Backwards-compatible service proxy
 │   │   └── localCardStorage.ts   # Offline-safe local cache manager
