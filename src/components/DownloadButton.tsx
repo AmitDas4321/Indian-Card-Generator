@@ -103,7 +103,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
         {isGenerating ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Generating & Registering Certificate...</span>
+            <span>Generating Card...</span>
           </>
         ) : (
           <>
