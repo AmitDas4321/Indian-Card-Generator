@@ -7,3 +7,5 @@ coverage/
 .env*
 !.env.example
 metadata.json
+.firebaserc
+firebase.json
