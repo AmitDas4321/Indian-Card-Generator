@@ -1,4 +1,5 @@
 import { CardData } from '../types';
+import { generateSecurityHeaders } from '../utils/apiSigner';
 
 export interface CertificateRecord {
   id: string;
@@ -24,7 +25,9 @@ export function isValidCertificateId(id: string): boolean {
  */
 export async function getNextSequencePreview(): Promise<string> {
   try {
-    const res = await fetch('/api/next-id');
+    const path = '/api/next-id';
+    const headers = await generateSecurityHeaders('GET', path);
+    const res = await fetch(path, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.id) {
@@ -45,18 +48,22 @@ export async function generateAndSaveCertificate(cardData: CardData): Promise<Ce
     throw new Error('Uploaded photo file size is too large for registration. Please upload a smaller photo (under 5MB).');
   }
 
+  const payload = {
+    id: cardData.idNumber,
+    name: cardData.name,
+    address: cardData.address,
+    phoneNumber: cardData.phoneNumber,
+    photoUrl: cardData.photoUrl,
+  };
+
   try {
-    const res = await fetch('/api/certificates', {
+    const path = '/api/certificates';
+    const headers = await generateSecurityHeaders('POST', path, payload);
+
+    const res = await fetch(path, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: cardData.name,
-        address: cardData.address,
-        phoneNumber: cardData.phoneNumber,
-        photoUrl: cardData.photoUrl,
-      }),
+      headers,
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -86,7 +93,9 @@ export async function getCertificateById(id: string): Promise<CertificateRecord 
   }
 
   try {
-    const res = await fetch(`/api/certificates/${encodeURIComponent(cleanId)}`);
+    const path = `/api/certificates/${encodeURIComponent(cleanId)}`;
+    const headers = await generateSecurityHeaders('GET', path);
+    const res = await fetch(path, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && typeof data === 'object' && data.id === cleanId) {
@@ -99,3 +108,4 @@ export async function getCertificateById(id: string): Promise<CertificateRecord 
 
   return null;
 }
+

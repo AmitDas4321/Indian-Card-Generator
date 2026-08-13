@@ -2,16 +2,37 @@ import QRCode from 'qrcode';
 import { CardData } from '../types';
 
 /**
+ * Resolves the verification base URL from environment variables, falling back to window.location.origin.
+ */
+export function getVerificationBaseUrl(): string {
+  const envUrl =
+    (import.meta as any).env?.VITE_VERIFICATION_BASE_URL ||
+    (typeof process !== 'undefined' ? (process.env as any)?.VERIFICATION_BASE_URL : '') ||
+    (typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '');
+
+  let clean = (typeof envUrl === 'string' ? envUrl.trim() : '').replace(/\/+$/, '');
+  if (clean.endsWith('/verify')) {
+    clean = clean.slice(0, -7).replace(/\/+$/, '');
+  }
+  return clean;
+}
+
+/**
+ * Builds the canonical verification URL for a given certificate ID:
+ * ${VERIFICATION_BASE_URL}/verify/${certificateId}
+ */
+export function getCertificateVerificationUrl(certificateId: string): string {
+  const cleanId = (certificateId || '').trim().replace(/^\/+/, '');
+  const baseUrl = getVerificationBaseUrl();
+  return baseUrl ? `${baseUrl}/verify/${cleanId}` : `/verify/${cleanId}`;
+}
+
+/**
  * Generates a high-contrast QR code image containing the path-based verification URL.
  */
 async function generateQRCodeImage(data: CardData): Promise<HTMLImageElement | null> {
-  const origin =
-    typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'https://indian-card-generator.web.app';
-
   const cleanId = (data.idNumber || 'IND-2026-7890').trim();
-  const verifyUrl = `${origin}/verify/${cleanId}`;
+  const verifyUrl = getCertificateVerificationUrl(cleanId);
 
   try {
     const dataUrl = await QRCode.toDataURL(verifyUrl, {

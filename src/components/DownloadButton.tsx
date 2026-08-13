@@ -5,16 +5,17 @@ import { validateCardData } from '../utils/validation';
 import { triggerSuccessConfetti } from '../utils/confetti';
 import {
   generateAndSaveCertificate,
-  getNextSequencePreview,
   CertificateRecord,
 } from '../services/firebaseCertificate';
+import { saveCardLocally } from '../services/localCardStorage';
 import { renderCardToCanvas } from '../utils/cardRenderer';
 
 interface DownloadButtonProps {
   data: CardData;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   onValidationError: (errors: ReturnType<typeof validateCardData>['errors']) => void;
-  onCertificateGenerated?: (assignedId: string, nextPreviewId: string) => void;
+  onCertificateGenerated?: (assignedId: string) => void;
+  isLocked?: boolean;
 }
 
 export const DownloadButton: React.FC<DownloadButtonProps> = ({
@@ -22,6 +23,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
   canvasRef,
   onValidationError,
   onCertificateGenerated,
+  isLocked = false,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,25 +43,36 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
     setIsGenerating(true);
 
     try {
-      // 1. Atomically register certificate in Firebase
-      const certRecord: CertificateRecord = await generateAndSaveCertificate(data);
-      const assignedId = certRecord.id;
+      let finalCardData: CardData;
+      let assignedId = data.idNumber;
 
-      // 2. Prepare final card data with assigned ID
-      const finalCardData: CardData = {
-        ...data,
-        idNumber: assignedId,
-      };
+      if (isLocked) {
+        // If already locked, directly use the saved assigned ID
+        finalCardData = { ...data };
+      } else {
+        // 1. Atomically register certificate in Firebase
+        const certRecord: CertificateRecord = await generateAndSaveCertificate(data);
+        assignedId = certRecord.id;
 
-      // 3. Render canvas with assigned ID and matching QR code
+        // 2. Prepare final card data with assigned ID
+        finalCardData = {
+          ...data,
+          idNumber: assignedId,
+        };
+
+        // 3. Save to browser local storage so it locks permanently
+        saveCardLocally(finalCardData);
+      }
+
+      // 4. Render canvas with assigned ID and matching QR code
       const canvas = canvasRef.current;
       await renderCardToCanvas(canvas, finalCardData);
 
-      // 4. Generate high-res PNG
+      // 5. Generate high-res PNG
       const dataUrl = canvas.toDataURL('image/png', 1.0);
 
       // Sanitize user name for filename
-      const cleanName = (data.name || 'personalized-card')
+      const cleanName = (finalCardData.name || 'personalized-card')
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '-')
         .replace(/-+/g, '-')
@@ -78,10 +91,8 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
       // Trigger download-success celebration confetti effect
       triggerSuccessConfetti(canvasRef.current);
 
-      // 5. Fetch next preview sequence ID for form
-      const nextId = await getNextSequencePreview();
-      if (onCertificateGenerated) {
-        onCertificateGenerated(assignedId, nextId);
+      if (!isLocked && onCertificateGenerated) {
+        onCertificateGenerated(assignedId);
       }
     } catch (err) {
       console.error('Certificate registration/download failed:', err);
@@ -121,3 +132,4 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
     </div>
   );
 };
+

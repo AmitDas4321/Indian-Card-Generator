@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Lock } from 'lucide-react';
 import { CardData, FormErrors } from '../types';
 import { PhotoUploader } from './PhotoUploader';
 
@@ -8,6 +8,7 @@ interface CardFormProps {
   onChange: (newData: CardData) => void;
   onClear: () => void;
   errors: FormErrors;
+  isLocked?: boolean;
 }
 
 export const CardForm: React.FC<CardFormProps> = ({
@@ -15,6 +16,7 @@ export const CardForm: React.FC<CardFormProps> = ({
   onChange,
   onClear,
   errors,
+  isLocked = false,
 }) => {
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const idInputRef = useRef<HTMLInputElement | null>(null);
@@ -29,6 +31,8 @@ export const CardForm: React.FC<CardFormProps> = ({
 
   // Sync autofill values seamlessly when browser autofills inputs without triggering React synthetic events
   useEffect(() => {
+    if (isLocked) return; // Don't autofill/modify when locked
+
     const checkAndSync = () => {
       const currentData = dataRef.current;
       let nextData: CardData | null = null;
@@ -96,12 +100,13 @@ export const CardForm: React.FC<CardFormProps> = ({
         el.removeEventListener('focus', handleEvent);
       });
     };
-  }, []);
+  }, [isLocked]);
 
   const handleChange = (
     field: keyof CardData,
     value: string | null
   ) => {
+    if (isLocked) return;
     onChange({
       ...data,
       [field]: value,
@@ -110,27 +115,34 @@ export const CardForm: React.FC<CardFormProps> = ({
 
   return (
     <div className="bg-white dark:bg-[#0b1224] border border-slate-200 dark:border-[#1d2940] rounded-2xl p-5 shadow-lg dark:shadow-xl space-y-4 transition-colors duration-200">
-      {/* Header with Title & Clear Button */}
+      {/* Header with Title & Clear/Locked Button */}
       <div className="flex items-start justify-between border-b border-slate-100 dark:border-[#1d2940] pb-3.5">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ff9800] inline-block shrink-0 shadow-sm shadow-orange-500/50" />
-            Enter Details
+            <span className={`w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm ${isLocked ? 'bg-[#00c389] shadow-emerald-500/50' : 'bg-[#ff9800] shadow-orange-500/50'}`} />
+            {isLocked ? 'Card Registered' : 'Enter Details'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-[#9aa3b5] mt-0.5">
-            Fill in your details below to see live card preview
+            {isLocked ? 'Your card details are saved and locked' : 'Fill in your details below to see live card preview'}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onClear}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-[#dfe2e8] hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#172238] dark:hover:bg-[#26344d] border border-slate-200 dark:border-[#26344d] rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#ff9800] outline-none cursor-pointer"
-          title="Clear form inputs"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>Clear</span>
-        </button>
+        {isLocked ? (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Locked</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-[#dfe2e8] hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#172238] dark:hover:bg-[#26344d] border border-slate-200 dark:border-[#26344d] rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#ff9800] outline-none cursor-pointer"
+            title="Clear form inputs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear</span>
+          </button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -139,6 +151,7 @@ export const CardForm: React.FC<CardFormProps> = ({
           photoUrl={data.photoUrl}
           onPhotoChange={(url) => handleChange('photoUrl', url)}
           error={errors.photo}
+          disabled={isLocked}
         />
 
         {/* Name Input */}
@@ -152,19 +165,24 @@ export const CardForm: React.FC<CardFormProps> = ({
             name="name"
             autoComplete="name"
             type="text"
+            disabled={isLocked}
             value={data.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="e.g. Rahul Sharma"
-            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.name ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
+            className={`w-full h-10 px-3 text-sm rounded-xl border transition-all outline-none ${
+              isLocked
+                ? 'bg-slate-100/80 dark:bg-[#0a1020]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#26344d] cursor-not-allowed font-medium'
+                : errors.name
+                ? 'bg-red-50/50 dark:bg-red-950/10 border-red-500/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
+                : 'bg-slate-50 dark:bg-[#0a1020] border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
             }`}
           />
-          {errors.name && (
+          {errors.name && !isLocked && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.name}</p>
           )}
         </div>
 
-        {/* ID Number Input (Auto-generated / Read-Only) */}
+        {/* ID Number Input (Auto-generated / Read-Only / Locked) */}
         <div className="space-y-1">
           <label htmlFor="id-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
             ID No. <span className="text-[#ff9800]">*</span>
@@ -176,13 +194,14 @@ export const CardForm: React.FC<CardFormProps> = ({
             autoComplete="off"
             type="text"
             readOnly
+            disabled={isLocked}
             value={data.idNumber}
             placeholder="IND-2026-7890"
             className={`w-full h-10 px-3 bg-slate-100/80 dark:bg-[#0a1020]/80 font-mono text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none cursor-not-allowed ${
-              errors.idNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d]'
+              errors.idNumber && !isLocked ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d]'
             }`}
           />
-          {errors.idNumber && (
+          {errors.idNumber && !isLocked && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.idNumber}</p>
           )}
         </div>
@@ -199,17 +218,22 @@ export const CardForm: React.FC<CardFormProps> = ({
             autoComplete="tel"
             type="tel"
             maxLength={10}
+            disabled={isLocked}
             value={data.phoneNumber}
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, '');
               handleChange('phoneNumber', val);
             }}
             placeholder="e.g. 9876543210 (10 digits)"
-            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.phoneNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
+            className={`w-full h-10 px-3 text-sm rounded-xl border transition-all outline-none ${
+              isLocked
+                ? 'bg-slate-100/80 dark:bg-[#0a1020]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#26344d] cursor-not-allowed font-medium'
+                : errors.phoneNumber
+                ? 'bg-red-50/50 dark:bg-red-950/10 border-red-500/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
+                : 'bg-slate-50 dark:bg-[#0a1020] border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
             }`}
           />
-          {errors.phoneNumber && (
+          {errors.phoneNumber && !isLocked && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.phoneNumber}</p>
           )}
         </div>
@@ -225,14 +249,19 @@ export const CardForm: React.FC<CardFormProps> = ({
             name="address"
             autoComplete="street-address"
             rows={3}
+            disabled={isLocked}
             value={data.address}
             onChange={(e) => handleChange('address', e.target.value)}
             placeholder="e.g. New Delhi, Delhi"
-            className={`w-full p-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none resize-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.address ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
+            className={`w-full p-3 text-sm rounded-xl border transition-all outline-none resize-none ${
+              isLocked
+                ? 'bg-slate-100/80 dark:bg-[#0a1020]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#26344d] cursor-not-allowed font-medium'
+                : errors.address
+                ? 'bg-red-50/50 dark:bg-red-950/10 border-red-500/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
+                : 'bg-slate-50 dark:bg-[#0a1020] border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800]'
             }`}
           />
-          {errors.address && (
+          {errors.address && !isLocked && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{errors.address}</p>
           )}
         </div>
@@ -240,4 +269,5 @@ export const CardForm: React.FC<CardFormProps> = ({
     </div>
   );
 };
+
 

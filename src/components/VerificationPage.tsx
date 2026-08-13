@@ -22,7 +22,7 @@ import {
   CertificateRecord,
 } from '../services/firebaseCertificate';
 import { CardData } from '../types';
-import { renderCardToCanvas } from '../utils/cardRenderer';
+import { renderCardToCanvas, getCertificateVerificationUrl } from '../utils/cardRenderer';
 import { triggerSuccessConfetti } from '../utils/confetti';
 
 interface VerificationPageProps {
@@ -99,17 +99,9 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
     onNavigateVerify(cleanId);
   };
 
-  const getVerificationUrl = (id: string) => {
-    const origin =
-      typeof window !== 'undefined' && window.location?.origin
-        ? window.location.origin
-        : 'https://indian-card-generator.web.app';
-    return `${origin}/verify/${id}`;
-  };
-
   const handleCopyUrl = () => {
     if (!activeId) return;
-    const url = getVerificationUrl(activeId);
+    const url = getCertificateVerificationUrl(activeId);
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -437,7 +429,7 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
               </label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 bg-slate-50 dark:bg-[#0a1020] border border-slate-200 dark:border-[#26344d] rounded-xl px-3.5 py-2 text-xs font-mono text-slate-800 dark:text-slate-200 truncate flex items-center min-h-[36px]">
-                  <span className="truncate">{getVerificationUrl(activeId || 'IND-2026-XXXX')}</span>
+                  <span className="truncate">{getCertificateVerificationUrl(activeId || 'IND-2026-XXXX')}</span>
                 </div>
                 <button
                   type="button"

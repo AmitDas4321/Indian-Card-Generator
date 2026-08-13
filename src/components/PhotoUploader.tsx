@@ -6,18 +6,21 @@ interface PhotoUploaderProps {
   photoUrl: string | null;
   onPhotoChange: (url: string | null) => void;
   error?: string;
+  disabled?: boolean;
 }
 
 export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   photoUrl,
   onPhotoChange,
   error: externalError,
+  disabled = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [internalError, setInternalError] = useState<string | null>(null);
 
   const handleFileSelect = (file: File) => {
+    if (disabled) return;
     setInternalError(null);
     const validation = validatePhotoFile(file);
     if (!validation.isValid) {
@@ -35,18 +38,21 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -57,12 +63,14 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     if (e.target.files && e.target.files[0]) {
       handleFileSelect(e.target.files[0]);
     }
   };
 
   const handleRemove = (e: React.MouseEvent) => {
+    if (disabled) return;
     e.stopPropagation();
     onPhotoChange(null);
     setInternalError(null);
@@ -84,6 +92,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         onChange={handleChange}
+        disabled={disabled}
         className="hidden"
         id="photo-upload-input"
         aria-label="Upload Passport Photo"
@@ -91,9 +100,11 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
 
       {!photoUrl ? (
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (!disabled) fileInputRef.current?.click();
+          }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault();
               fileInputRef.current?.click();
             }
@@ -101,15 +112,17 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          tabIndex={0}
+          tabIndex={disabled ? -1 : 0}
           role="button"
           aria-label="Click or drag and drop photo here"
-          className={`group relative flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#ff9800] ${
-            isDragging
-              ? 'border-[#ff9800] bg-[#ff9800]/10 scale-[0.99]'
+          className={`group relative flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed transition-all outline-none ${
+            disabled
+              ? 'opacity-60 cursor-not-allowed border-slate-300 dark:border-[#26344d] bg-slate-100/60 dark:bg-[#0a1020]/60'
+              : isDragging
+              ? 'border-[#ff9800] bg-[#ff9800]/10 scale-[0.99] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#ff9800]'
               : displayError
-              ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10'
-              : 'border-slate-300 dark:border-[#26344d] bg-slate-50 dark:bg-[#0a1020] hover:border-[#ff9800] hover:bg-orange-50/50 dark:hover:bg-[#111a2d]'
+              ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#ff9800]'
+              : 'border-slate-300 dark:border-[#26344d] bg-slate-50 dark:bg-[#0a1020] hover:border-[#ff9800] hover:bg-orange-50/50 dark:hover:bg-[#111a2d] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#ff9800]'
           }`}
         >
           {/* Orange Circle Icon */}
@@ -140,28 +153,30 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
                 <ImageIcon className="w-3.5 h-3.5 text-[#00c389]" /> Photo Uploaded
               </p>
               <p className="text-[11px] text-slate-500 dark:text-[#9aa3b5] mt-0.5">
-                Ready for identity card
+                {disabled ? 'Card Photo Locked' : 'Ready for identity card'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-[#dfe2e8] bg-slate-200 hover:bg-slate-300 dark:bg-[#172238] dark:hover:bg-[#26344d] rounded-lg transition-colors border border-slate-300 dark:border-[#26344d] cursor-pointer"
-            >
-              Change
-            </button>
-            <button
-              type="button"
-              onClick={handleRemove}
-              aria-label="Remove photo"
-              className="p-1.5 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          {!disabled && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-[#dfe2e8] bg-slate-200 hover:bg-slate-300 dark:bg-[#172238] dark:hover:bg-[#26344d] rounded-lg transition-colors border border-slate-300 dark:border-[#26344d] cursor-pointer"
+              >
+                Change
+              </button>
+              <button
+                type="button"
+                onClick={handleRemove}
+                aria-label="Remove photo"
+                className="p-1.5 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
