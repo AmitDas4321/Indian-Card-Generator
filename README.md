@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <strong>A modern, fast, privacy-first browser-based card generator with a beautiful Indian-inspired design.</strong>
+  <strong>A modern, full-stack, secure, and privacy-first browser-based card generator & online verification portal with a beautiful Indian-inspired design.</strong>
 </p>
 
 <p align="center">
@@ -23,22 +23,24 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Express-4-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/Firebase-Database-FFA611?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
   <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/TailwindCSS-4-38BDF8?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/HTML5_Canvas-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5 Canvas">
+  <img src="https://img.shields.io/badge/HMAC--SHA256-Security-00C7B7?style=flat-square" alt="HMAC SHA256">
 </p>
 
 ---
 
 # 🇮🇳 About
 
-**Indian Card Generator** is a modern, fast, and privacy-focused browser-based card generator designed with a beautiful Indian-inspired visual aesthetic.
+**Indian Card Generator** is a full-stack identity-style card creation suite and verification system designed with an Indian visual aesthetic.
 
-The application allows users to create customizable identity-style cards directly in their browser using personal information, photographs, QR codes, and decorative Indian-themed design elements.
+It allows users to generate customizable, high-resolution identity-style cards directly in the browser with personal details, custom photo uploads, dynamic QR codes, and Ashoka Chakra decorative elements.
 
-The card-generation workflow is designed to run on the client side, without requiring a traditional backend or database for generating cards.
+In addition to client-side HD rendering, it includes a robust **server-side API with HMAC-SHA256 request signing, anti-replay nonce protection, Firebase Realtime Database persistence, and an instant Online Verification Portal**.
 
 > ⚠️ **IMPORTANT DISCLAIMER**
 >
@@ -50,73 +52,60 @@ The card-generation workflow is designed to run on the client side, without requ
 
 ---
 
-# 🌟 Experience
+# 🌟 Experience & Workflow
 
-The card creation process is designed to be simple, interactive, and fast.
+The card creation and verification process is intuitive, responsive, and secure:
 
 ```text
-📝 Enter Card Details
-
-        │
-        ▼
-
-📸 Upload Photograph
-
-        │
-        ▼
-
-🇮🇳 Apply Indian-Inspired Theme
-
-        │
-        ▼
-
-🔳 Generate QR Code
-
-        │
-        ▼
-
-⚡ Real-Time Canvas Rendering
-
-        │
-        ▼
-
-👀 Preview Your Card
-
-        │
-        ▼
-
-📥 Download HD PNG
-
-        │
-        ▼
-
-🎉 Download Celebration
-````
+ 📝 Enter Card Details & Upload Photo
+               │
+               ▼
+ 🇮🇳 Apply Indian-Inspired Tiranga Theme
+               │
+               ▼
+ 🔳 Generate Dynamic QR Code (${VERIFICATION_BASE_URL}/verify/:id)
+               │
+               ▼
+ ⚡ Real-Time HTML5 Canvas Live Rendering (1600 × 1000 px)
+               │
+               ▼
+ 🔐 HMAC-SHA256 Signed API Sync to Firebase Realtime Database
+               │
+               ▼
+ 📥 Download HD PNG with Confetti Celebration
+               │
+               ▼
+ 🔍 Instant Online Verification via /verify/:id or QR Scanner
+```
 
 ---
 
 # ✨ Features
 
-* 🇮🇳 **Indian-Inspired Design**
-* 🎨 Tiranga-inspired saffron, white & green colors
-* 🌀 Ashoka Chakra inspired decorative elements
-* ✨ Golden ornamental accents
-* 🖼️ Custom photograph upload
-* ✂️ Automatic photo cropping
-* 🔳 QR code support
-* ⚡ Real-time live card preview
-* 🖌️ HTML5 Canvas rendering
-* 📥 High-resolution PNG export
-* 🖨️ 1600 × 1000 px HD card output
-* 🔒 Client-side card generation
-* 🚫 No required backend
-* 🚫 No required database
-* 📱 Fully responsive design
-* 💻 Desktop & laptop support
-* 📲 Mobile & tablet support
-* 🔄 Browser autofill support
-* 🎉 Confetti download animation
-* 🌐 Works directly in modern browsers
+### 🎨 Design & Canvas Rendering
+* 🇮🇳 **Patriotic Indian Aesthetic**: Saffron (`#FF9933`), White (`#FFFFFF`), Navy (`#060B18`), and Green (`#138808`) palette with golden ornamental accents.
+* 🌀 **Ashoka Chakra Watermarks**: Authentic vector-style 24-spoke Ashoka Chakra background watermark and holographic emblems.
+* 🖼️ **Photo Processing**: Local image upload, aspect-ratio preserved circular/rounded framing, and client-side processing.
+* 🖨️ **1600 × 1000 px HD PNG Export**: Crisp, high-DPI HTML5 canvas rendering for crystal-clear prints and digital storage.
+* 🌓 **Dark & Light Mode**: Seamless dark/light theme switching with smooth transitions.
+* 🎉 **Interactive Celebration**: Canvas confetti burst upon card generation and download.
+
+### 🔍 Verification Portal & Dynamic QR Engine
+* 🌐 **Online Verification Portal (`/verify/:id`)**: Dedicated portal route to verify card authenticity, view issue timestamps, and re-download cards.
+* ⚙️ **Configurable Verification URL (`VERIFICATION_BASE_URL`)**: Dynamic QR code generator pointing to your custom verification domain (supports custom workers, subdomains, and root URLs with or without trailing slashes).
+* 📱 **Built-in QR Code Generation**: Instant QR rendering encoding the live verification link directly onto the card canvas.
+
+### 🛡️ Enterprise-Grade API Security
+* 🔑 **HMAC-SHA256 Request Signing**: All API requests (`/api/*`) are cryptographically signed using `X-Signature` over a canonical payload string.
+* ⏱️ **Anti-Replay Protection**: Strict `X-Timestamp` drift validation (< 5 minutes) and single-use `X-Nonce` memory cache to eliminate replay attacks.
+* 🔒 **Constant-Time Verification**: Timing attack prevention using `crypto.timingSafeEqual`.
+* 🛡️ **API Key Validation**: Server-side validation via `X-API-Key`.
+* 🚦 **IP Rate Limiting**: Built-in sliding window rate limiter (60 requests/minute per IP) with standard `X-RateLimit-*` headers.
+* 🚫 **Conflict-Safe ID Allocation**: Prevents ID collisions by returning `409 Conflict` (`{"error":"ID already exists"}`) if a duplicate ID is submitted.
+
+### ☁️ Cloud Persistence & Offline Resilience
+* 🔥 **Firebase Realtime Database**: Stores verified certificates and card records securely in the cloud.
+* 💾 **Local Storage Fallback**: Seamless local storage cache fallback ensuring functionality even during network transitions.
 
 ---
 
@@ -134,426 +123,209 @@ The card creation process is designed to be simple, interactive, and fast.
   <img src="./public/assets/generator-preview.png" width="800" alt="Indian Card Generator Interface">
 </p>
 
-> Replace the screenshot filenames above with your actual screenshot filenames if needed.
-
 ---
 
-# 🎨 Design
+# 🎨 Design System
 
 Indian Card Generator uses an Indian-inspired visual system combining patriotic colors, elegant typography, decorative patterns, and modern UI components.
 
 ### 🇮🇳 Primary Colors
 
 ```text
-Deep Navy
-#060B18
-
-Dark Navy
-#0B1224
-
-Indian Saffron
-#FF9933
-
-Indian Green
-#138808
-
-Golden Accent
-#D4AF37
-
-White
-#FFFFFF
+Deep Navy       #060B18
+Dark Navy       #0B1224
+Indian Saffron  #FF9933
+Indian Green    #138808
+Golden Accent   #D4AF37
+White           #FFFFFF
 ```
 
 ### 🎨 Design Elements
 
-* 🇮🇳 Tiranga-inspired gradients
-* 🌀 Ashoka Chakra inspired patterns
-* ✨ Golden decorative accents
-* 🖼️ Rounded photo container
-* 🔳 QR code section
-* 🏷️ Structured information layout
-* 💧 Subtle background watermarks
-* 🖌️ Decorative borders
-* 📐 High-resolution Canvas rendering
-
----
-
-# ⚙️ How It Works
-
-## 1. Enter Information
-
-Users can enter customizable card information such as:
-
-```text
-Name
-ID Number
-Phone Number
-Address
-Date of Birth
-Blood Group
-Organization
-Other Custom Details
-```
-
----
-
-## 2. Upload Photograph
-
-Users can upload a profile photograph in common image formats:
-
-```text
-JPEG
-PNG
-WebP
-```
-
-The image can be processed locally before being rendered onto the card.
-
----
-
-## 3. Generate Card
-
-The application combines the provided information, photograph, QR code, and design elements.
-
-```text
-User Information
-       +
-Photograph
-       +
-QR Code
-       +
-Indian Theme
-       ↓
-HTML5 Canvas
-       ↓
-1600 × 1000 px
-       ↓
-HD PNG Card
-```
-
----
-
-## 4. Live Preview
-
-Every change made in the form can be reflected in the card preview.
-
-```text
-User Input
-    ↓
-React State
-    ↓
-Card Renderer
-    ↓
-HTML5 Canvas
-    ↓
-Live Preview
-```
-
----
-
-## 5. Download
-
-The generated Canvas is converted into a PNG image.
-
-Example:
-
-```text
-indian-card-1723567890123.png
-```
-
-A celebration animation can be triggered after a successful download.
-
----
-
-# 🔒 Privacy First
-
-Privacy is one of the core principles of the project.
-
-The card-generation workflow is designed to process user-provided information locally in the browser.
-
-```text
-┌──────────────────────┐
-│        USER          │
-│                      │
-│  Name                │
-│  Photo               │
-│  Card Information    │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│      BROWSER         │
-│                      │
-│  React               │
-│  Canvas              │
-│  Image Processing    │
-│  QR Generation       │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│    GENERATED CARD    │
-│                      │
-│      PNG IMAGE       │
-└──────────────────────┘
-```
-
-### Privacy Principles
-
-* 🔒 Card generation is client-side
-* 📸 Photos can be processed locally
-* 🚫 No required card-generation backend
-* 🚫 No required database
-* 🚫 No account required
-* 🧠 Image processing happens in browser memory
-* 🖥️ Canvas rendering happens locally
-
-> **Note:** The privacy characteristics of the application itself do not automatically cover third-party hosting, CDN, analytics, fonts, or other external services used by a deployment.
+* 🇮🇳 Tiranga-inspired gradients & micro-patterns
+* 🌀 Ashoka Chakra inspired 24-spoke vector geometry
+* ✨ Golden guilloché decorative borders
+* 🖼️ Rounded photo container with aspect cropping
+* 🔳 Dynamic high-contrast QR code
+* 🏷️ Structured identity information layout
+* 💧 Subtle background guilloché security watermarks
+* 📐 High-resolution 1600 × 1000 px Canvas rendering
 
 ---
 
 # 🛠️ Tech Stack
 
-| Technology          | Purpose                                    |
-| ------------------- | ------------------------------------------ |
-| **React 18**        | UI rendering and state management          |
-| **TypeScript**      | Type-safe development                      |
-| **Vite 6**          | Development server and production bundling |
-| **Tailwind CSS 4**  | Modern responsive styling                  |
-| **HTML5 Canvas**    | High-resolution card rendering             |
-| **Lucide React**    | Interface icons                            |
-| **Canvas Confetti** | Download celebration effects               |
-| **QR Code**         | QR generation and card integration         |
+| Technology | Purpose |
+| :--- | :--- |
+| **React 19** | Modern UI components and reactive state management |
+| **TypeScript 5** | Strict end-to-end type safety |
+| **Express 4** | Full-stack backend API server and security middlewares |
+| **Firebase** | Realtime cloud persistence for certificate records |
+| **Vite 6** | Lightning-fast development server & asset bundling |
+| **Tailwind CSS 4** | Utility-first responsive styling and dark mode |
+| **HTML5 Canvas** | High-DPI 1600 × 1000 px card rendering engine |
+| **Node.js Crypto** | HMAC-SHA256 cryptographic signing and timing-safe checks |
+| **QRCode** | Dynamic QR code generation for verification URLs |
+| **Canvas Confetti** | Download celebration particle animations |
+| **Lucide React** | Refined interface iconography |
 
 ---
 
-# 📦 Installation
+# 🔐 API & Security Architecture
 
-## Clone Repository
+### 1. Canonical Signing Format
+Every request to the `/api/*` backend must supply the following headers:
+* `X-API-Key`: Configured API key.
+* `X-Timestamp`: Current unix timestamp in milliseconds.
+* `X-Nonce`: Random unique string per request.
+* `X-Signature`: Hex-encoded HMAC-SHA256 digest.
+
+The canonical string signed with `API_SECRET_KEY` is formatted as:
+```text
+${METHOD}:${PATH}:${X-Timestamp}:${X-Nonce}:${REQUEST_BODY}
+```
+
+### 2. Available API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/health` | Service health check | No |
+| `GET` | `/api/next-id` | Retrieves the next sequential unique ID (`IND-2026-####`) | Yes |
+| `POST` | `/api/certificates` | Stores and signs a new certificate record (returns `409` on duplicate ID) | Yes |
+| `GET` | `/api/certificates/:id` | Fetches a certificate record by ID for verification | Yes |
+| `GET` | `/api/cards` | Fetches stored card records | Yes |
+
+---
+
+# ⚙️ Environment Variables
+
+Configure these variables in your `.env` file (refer to `.env.example`):
+
+```env
+# Used for self-referential links, OAuth callbacks, and API endpoints.
+APP_URL=https://example.com
+
+# Verification Base Domain (used for QR code generation and verification links)
+VERIFICATION_BASE_URL=https://indian-card-verify.blueorbitdevs.workers.dev
+
+# Firebase Realtime Database Credentials
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+FIREBASE_DATABASE_SECRET=your_firebase_database_secret
+
+# API Security (HMAC-SHA256 & API Key)
+API_KEY=7f9c2e4a8b1d6f3c9a7e5b2d8f4c1a6e0d3b9c7f2a5e8d1
+API_SECRET_KEY=Q8vN4xZ7pL2mK9rT5wY3cH6sJ1dF8aB0nG4uE7iP2oR9tV6x
+```
+
+---
+
+# 📦 Installation & Quick Start
+
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/AmitDas4321/Indian-Card-Generator.git
-```
-
-## Enter Project Directory
-
-```bash
 cd Indian-Card-Generator
 ```
 
-## Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-## Start Development Server
+### 3. Setup Environment Variables
+
+```bash
+cp .env.example .env
+# Edit .env and supply your credentials
+```
+
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Open the application:
-
+Open your browser at:
 ```text
 http://localhost:3000
 ```
 
 ---
 
-# 🚀 Production Build
+# 🚀 Production Build & Deployment
 
-Create a production build:
-
+### Build Application
 ```bash
 npm run build
 ```
+This compiles the Vite frontend and bundles the backend server into `dist/server.cjs`.
 
-Preview the production build:
-
+### Start Production Server
 ```bash
-npm run preview
+npm run start
 ```
 
----
+### Available Scripts
 
-# 📜 Available Scripts
-
-| Command           | Description                        |
-| ----------------- | ---------------------------------- |
-| `npm run dev`     | Starts the Vite development server |
-| `npm run build`   | Creates the production build       |
-| `npm run preview` | Previews the production build      |
-| `npm run lint`    | Runs TypeScript type checking      |
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Starts the Express + Vite development server via `tsx` |
+| `npm run build` | Compiles Vite client and bundles `server.ts` via `esbuild` |
+| `npm run start` | Launches the compiled production server (`node dist/server.cjs`) |
+| `npm run preview` | Previews the production client build |
+| `npm run lint` | Runs TypeScript type checking (`tsc --noEmit`) |
+| `npm run clean` | Removes build artifacts and `dist` directory |
 
 ---
 
 # 📁 Project Structure
 
 ```text
-Indian-Card-Generator
-│
+Indian-Card-Generator/
 ├── src/
-│   │
 │   ├── components/
-│   │   ├── CardForm.tsx
-│   │   ├── CardPreview.tsx
-│   │   ├── DownloadButton.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── PhotoUploader.tsx
-│   │   └── QRScanner.tsx
-│   │
+│   │   ├── CardForm.tsx          # Card detail input controls & validation
+│   │   ├── CardPreview.tsx       # Live interactive canvas card preview
+│   │   ├── DownloadButton.tsx    # HD PNG export and celebration trigger
+│   │   ├── Footer.tsx            # Application footer and branding
+│   │   ├── Header.tsx            # Navigation, dark mode toggle, and portal link
+│   │   ├── PhotoUploader.tsx     # Local photo upload & aspect cropper
+│   │   ├── SocialPromo.tsx       # Social share and community widget
+│   │   └── VerificationPage.tsx  # /verify/:id Certificate Verification Portal
+│   ├── services/
+│   │   ├── firebaseCertificate.ts# Firebase Realtime Database API client
+│   │   └── localCardStorage.ts   # Offline-safe local cache manager
 │   ├── utils/
-│   │   ├── cardRenderer.ts
-│   │   ├── confetti.ts
-│   │   ├── qr.ts
-│   │   └── validation.ts
-│   │
-│   ├── App.tsx
-│   ├── index.css
-│   ├── main.tsx
-│   └── types.ts
-│
-├── public/
-│   └── ...
-│
-├── assets/
-│   ├── banner.png
-│   ├── card-preview.png
-│   └── ...
-│
-├── index.html
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.ts
-└── README.md
-```
-
-> Adjust the structure above if your actual source files have different names.
-
----
-
-# 🧩 Card Rendering Engine
-
-The main card rendering logic is handled by the Canvas renderer:
-
-```text
-src/utils/cardRenderer.ts
-```
-
-The renderer is responsible for combining:
-
-* Background
-* Indian-inspired theme
-* Decorative elements
-* Photograph
-* User information
-* QR code
-* Borders
-* Typography
-* Watermarks
-* Card layout
-
-The final Canvas resolution is:
-
-```text
-1600 × 1000 px
+│   │   ├── apiSigner.ts          # Client-side HMAC request signer
+│   │   ├── cardRenderer.ts       # 1600x1000px HTML5 Canvas rendering engine
+│   │   ├── confetti.ts           # Confetti celebration animations
+│   │   └── validation.ts         # Input validation helpers
+│   ├── App.tsx                   # Main router and view manager
+│   ├── index.css                 # Tailwind CSS styles
+│   ├── main.tsx                  # React DOM root
+│   └── types.ts                  # TypeScript interfaces & types
+├── server.ts                     # Express server, HMAC verification & Firebase sync
+├── vite.config.ts                # Vite configuration with Tailwind CSS & env definitions
+├── package.json                  # Dependencies and build scripts
+└── README.md                     # Documentation
 ```
 
 ---
 
-# 🔳 QR Code
+# 📱 Responsive Design & Browser Support
 
-The card can include a QR code containing selected card information or other non-sensitive content configured by the application.
-
-Example flow:
-
-```text
-Card Information
-       ↓
-QR Generator
-       ↓
-QR Code
-       ↓
-Canvas
-       ↓
-Final Card
-```
-
-The QR code is intended as a convenient machine-readable element and **does not make the generated card an official identity document**.
-
----
-
-# 📱 Responsive Design
-
-Indian Card Generator is designed for multiple screen sizes.
-
-```text
-📱 Mobile
-   ↓
-📲 Tablet
-   ↓
-💻 Laptop
-   ↓
-🖥️ Desktop
-   ↓
-🖥️ Ultra-wide
-```
-
-The UI adapts to the available screen while the exported card maintains its high-resolution Canvas dimensions.
-
----
-
-# 🎯 Use Cases
-
-Indian Card Generator can be useful for:
-
-* 🎉 Events
-* 🏫 Educational projects
-* 👥 Organizations
-* 🏢 Internal organization identification
-* 🎭 Cultural programs
-* 🇮🇳 Independence Day activities
-* 🇮🇳 Republic Day activities
-* 🎨 Creative projects
-* 📸 Personal novelty cards
-* 🧪 UI / Canvas demonstration projects
-
-**Do not present generated cards as government-issued identification.**
-
----
-
-# 🌍 Browser Support
-
-| Browser          | Support |
-| ---------------- | :-----: |
-| Chrome           |    ✅    |
-| Microsoft Edge   |    ✅    |
-| Firefox          |    ✅    |
-| Safari           |    ✅    |
-| Brave            |    ✅    |
-| Opera            |    ✅    |
-| Android Browsers |    ✅    |
-| iOS Browsers     |    ✅    |
-
----
-
-# 🚀 Deployment
-
-Because Indian Card Generator is primarily a client-side React/Vite application, it can be deployed on a wide range of hosting platforms.
-
-Possible deployment options include:
-
-* Vercel
-* Netlify
-* Cloudflare Pages
-* GitHub Pages
-* Static Hosting
-* VPS
-* Nginx
-* Docker
+| Browser | Support |
+| :--- | :---: |
+| Google Chrome | ✅ |
+| Microsoft Edge | ✅ |
+| Mozilla Firefox | ✅ |
+| Apple Safari | ✅ |
+| Brave | ✅ |
+| Opera | ✅ |
+| Android Browsers | ✅ |
+| iOS Safari & Chrome | ✅ |
 
 ---
 
@@ -561,7 +333,7 @@ Possible deployment options include:
 
 <p align="center">
   <a href="https://github.com/AmitDas4321">
-    <img src="https://github.com/AmitDas4321.png" width="140" alt="Amit Das">
+    <img src="https://github.com/AmitDas4321.png" width="130" style="border-radius: 50%;" alt="Amit Das">
   </a>
 </p>
 
@@ -573,6 +345,9 @@ Possible deployment options include:
 <p align="center">
   <a href="https://github.com/AmitDas4321">
     <img src="https://img.shields.io/badge/GitHub-AmitDas4321-181717?style=for-the-badge&logo=github">
+  </a>
+  <a href="https://amitdas.site">
+    <img src="https://img.shields.io/badge/Portfolio-amitdas.site-0A66C2?style=for-the-badge">
   </a>
 </p>
 
@@ -589,44 +364,23 @@ Developed and maintained with ❤️ by **BlueOrbit Devs**.
 </p>
 
 <p align="center">
-  📧 blueorbitdevs@gmail.com
+  📧 <a href="mailto:blueorbitdevs@gmail.com">blueorbitdevs@gmail.com</a>
 </p>
 
 ---
 
 # ⭐ Support
 
-If you like this project, consider giving the repository a ⭐ on GitHub.
-
-Your support helps motivate the development of more open-source tools and creative web experiences.
-
-<p align="center">
-
-⭐ **Star the repository if you find it useful!**
-
-</p>
+If you find this project helpful, please consider giving the repository a ⭐ on GitHub!
 
 ---
 
 # 📜 License
 
-This project is licensed under the **MIT License**.
-
-See the [`LICENSE`](LICENSE) file for more information.
+This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
 
 ---
 
 <p align="center">
-
-### 🇮🇳
-
-*"Create with pride. Share with creativity. Celebrate India."*
-
-</p>
-
----
-
-<p align="center">
-  <b>Made with ❤️ for India by <a href="https://amitdas.site">Amit Das</a></b><br>
-  <b>BlueOrbit Devs</b>
+  <b>Made with ❤️ for India by <a href="https://amitdas.site">Amit Das</a> | BlueOrbit Devs</b>
 </p>
