@@ -154,7 +154,7 @@ export const CardForm: React.FC<CardFormProps> = ({
             type="text"
             value={data.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            placeholder="e.g. Amit Das"
+            placeholder="e.g. Rahul Sharma"
             className={`w-full h-10 px-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
               errors.name ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
             }`}
@@ -227,7 +227,7 @@ export const CardForm: React.FC<CardFormProps> = ({
             rows={3}
             value={data.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="e.g. Bankura, West Bengal"
+            placeholder="e.g. New Delhi, Delhi"
             className={`w-full p-3 bg-[#0a1020] text-sm text-white placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none resize-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
               errors.address ? 'border-red-500/80 bg-red-950/10' : 'border-[#26344d] hover:border-[#37496d]'
             }`}
