@@ -1,6 +1,0 @@
-{
-  "name": "Indian Card Generator",
-  "description": "Create your personalized Indian identity-style card instantly in your browser with live preview and high-quality 1600x1000 PNG download.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
