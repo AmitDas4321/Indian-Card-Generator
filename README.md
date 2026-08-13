@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <strong>A modern, full-stack, secure, and privacy-first browser-based card generator & online verification portal with a beautiful Indian-inspired design.</strong>
+  <strong>A modern, full-stack, multi-database, secure, and privacy-first browser-based card generator & online verification portal with a beautiful Indian-inspired design.</strong>
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Express-4-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
-  <img src="https://img.shields.io/badge/Firebase-Database-FFA611?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/Multi--DB-Firebase%20%7C%20MySQL%20%7C%20MongoDB-4479A1?style=flat-square" alt="Multi-DB Support">
   <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/TailwindCSS-4-38BDF8?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
   <img src="https://img.shields.io/badge/HMAC--SHA256-Security-00C7B7?style=flat-square" alt="HMAC SHA256">
@@ -40,7 +40,7 @@
 
 It allows users to generate customizable, high-resolution identity-style cards directly in the browser with personal details, custom photo uploads, dynamic QR codes, and Ashoka Chakra decorative elements.
 
-In addition to client-side HD rendering, it includes a robust **server-side API with HMAC-SHA256 request signing, anti-replay nonce protection, Firebase Realtime Database persistence, and an instant Online Verification Portal**.
+In addition to client-side HD rendering, it includes a robust **server-side API with HMAC-SHA256 request signing, anti-replay nonce protection, multi-database pluggable persistence (Firebase Realtime Database, MySQL, MongoDB), and an instant Online Verification Portal**.
 
 > ⚠️ **IMPORTANT DISCLAIMER**
 >
@@ -69,7 +69,8 @@ The card creation and verification process is intuitive, responsive, and secure:
  ⚡ Real-Time HTML5 Canvas Live Rendering (1600 × 1000 px)
                │
                ▼
- 🔐 HMAC-SHA256 Signed API Sync to Firebase Realtime Database
+ 🔐 HMAC-SHA256 Signed API Sync to Chosen Database Provider
+    (Firebase Realtime Database ⇄ MySQL ⇄ MongoDB)
                │
                ▼
  📥 Download HD PNG with Confetti Celebration
@@ -81,6 +82,13 @@ The card creation and verification process is intuitive, responsive, and secure:
 ---
 
 # ✨ Features
+
+### 🗄️ Multi-Database Abstraction Layer
+Switch between enterprise database providers simply by setting `DATABASE_PROVIDER`:
+* 🔥 **Firebase Realtime Database** (`DATABASE_PROVIDER=firebase`): Cloud-hosted real-time persistence with memory fallback.
+* 🐬 **MySQL** (`DATABASE_PROVIDER=mysql`): Connection pooling via `mysql2/promise`, automatic table migrations, parameterized prepared statements, and `LONGTEXT` Base64 image storage.
+* 🍃 **MongoDB** (`DATABASE_PROVIDER=mongodb`): Connection pooling with `MongoClient`, auto-indexed unique `id` collection, and flexible document persistence.
+* 🛡️ **Zero Frontend Exposure**: Database credentials, connection strings, and passwords remain strictly on the backend.
 
 ### 🎨 Design & Canvas Rendering
 * 🇮🇳 **Patriotic Indian Aesthetic**: Saffron (`#FF9933`), White (`#FFFFFF`), Navy (`#060B18`), and Green (`#138808`) palette with golden ornamental accents.
@@ -102,10 +110,6 @@ The card creation and verification process is intuitive, responsive, and secure:
 * 🛡️ **API Key Validation**: Server-side validation via `X-API-Key`.
 * 🚦 **IP Rate Limiting**: Built-in sliding window rate limiter (60 requests/minute per IP) with standard `X-RateLimit-*` headers.
 * 🚫 **Conflict-Safe ID Allocation**: Prevents ID collisions by returning `409 Conflict` (`{"error":"ID already exists"}`) if a duplicate ID is submitted.
-
-### ☁️ Cloud Persistence & Offline Resilience
-* 🔥 **Firebase Realtime Database**: Stores verified certificates and card records securely in the cloud.
-* 💾 **Local Storage Fallback**: Seamless local storage cache fallback ensuring functionality even during network transitions.
 
 ---
 
@@ -140,17 +144,6 @@ Golden Accent   #D4AF37
 White           #FFFFFF
 ```
 
-### 🎨 Design Elements
-
-* 🇮🇳 Tiranga-inspired gradients & micro-patterns
-* 🌀 Ashoka Chakra inspired 24-spoke vector geometry
-* ✨ Golden guilloché decorative borders
-* 🖼️ Rounded photo container with aspect cropping
-* 🔳 Dynamic high-contrast QR code
-* 🏷️ Structured identity information layout
-* 💧 Subtle background guilloché security watermarks
-* 📐 High-resolution 1600 × 1000 px Canvas rendering
-
 ---
 
 # 🛠️ Tech Stack
@@ -160,7 +153,7 @@ White           #FFFFFF
 | **React 19** | Modern UI components and reactive state management |
 | **TypeScript 5** | Strict end-to-end type safety |
 | **Express 4** | Full-stack backend API server and security middlewares |
-| **Firebase** | Realtime cloud persistence for certificate records |
+| **Multi-DB Engine** | Pluggable database abstraction for Firebase RTDB, MySQL, and MongoDB |
 | **Vite 6** | Lightning-fast development server & asset bundling |
 | **Tailwind CSS 4** | Utility-first responsive styling and dark mode |
 | **HTML5 Canvas** | High-DPI 1600 × 1000 px card rendering engine |
@@ -189,11 +182,12 @@ ${METHOD}:${PATH}:${X-Timestamp}:${X-Nonce}:${REQUEST_BODY}
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/api/health` | Service health check | No |
-| `GET` | `/api/next-id` | Retrieves the next sequential unique ID (`IND-2026-####`) | Yes |
+| `GET` | `/api/health` | Service health & active database provider check | No |
+| `GET` | `/api/next-id` | Retrieves the next preview unique ID (`IND-2026-####`) | Yes |
 | `POST` | `/api/certificates` | Stores and signs a new certificate record (returns `409` on duplicate ID) | Yes |
 | `GET` | `/api/certificates/:id` | Fetches a certificate record by ID for verification | Yes |
-| `GET` | `/api/cards` | Fetches stored card records | Yes |
+| `PUT` | `/api/certificates/:id` | Updates a certificate record | Yes |
+| `DELETE` | `/api/certificates/:id` | Deletes a certificate record | Yes |
 
 ---
 
@@ -208,9 +202,23 @@ APP_URL=https://example.com
 # Verification Base Domain (used for QR code generation and verification links)
 VERIFICATION_BASE_URL=https://indian-card-verify.blueorbitdevs.workers.dev
 
-# Firebase Realtime Database Credentials
+# Database Selection: 'firebase' | 'mysql' | 'mongodb'
+DATABASE_PROVIDER=firebase
+
+# Firebase Realtime Database
 FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
 FIREBASE_DATABASE_SECRET=your_firebase_database_secret
+
+# MySQL
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=tiranga_cards
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DATABASE=tiranga_cards
 
 # API Security (HMAC-SHA256 & API Key)
 API_KEY=7f9c2e4a8b1d6f3c9a7e5b2d8f4c1a6e0d3b9c7f2a5e8d1
@@ -238,7 +246,7 @@ npm install
 
 ```bash
 cp .env.example .env
-# Edit .env and supply your credentials
+# Edit .env and supply your credentials and DATABASE_PROVIDER
 ```
 
 ### 4. Start Development Server
@@ -295,7 +303,14 @@ Indian-Card-Generator/
 │   │   ├── SocialPromo.tsx       # Social share and community widget
 │   │   └── VerificationPage.tsx  # /verify/:id Certificate Verification Portal
 │   ├── services/
-│   │   ├── firebaseCertificate.ts# Firebase Realtime Database API client
+│   │   ├── database/             # Multi-Database Abstraction Layer
+│   │   │   ├── types.ts          # Common Database Adapter interfaces
+│   │   │   ├── firebase.ts       # Firebase Realtime Database Adapter
+│   │   │   ├── mysql.ts          # MySQL Connection Pool Adapter & Migration
+│   │   │   ├── mongodb.ts        # MongoDB MongoClient Adapter & Indexes
+│   │   │   └── index.ts          # Unified Database Service Provider & ID Engine
+│   │   ├── certificateService.ts # Client API connector to backend
+│   │   ├── firebaseCertificate.ts# Backwards-compatible service proxy
 │   │   └── localCardStorage.ts   # Offline-safe local cache manager
 │   ├── utils/
 │   │   ├── apiSigner.ts          # Client-side HMAC request signer
@@ -306,26 +321,11 @@ Indian-Card-Generator/
 │   ├── index.css                 # Tailwind CSS styles
 │   ├── main.tsx                  # React DOM root
 │   └── types.ts                  # TypeScript interfaces & types
-├── server.ts                     # Express server, HMAC verification & Firebase sync
+├── server.ts                     # Express server, HMAC verification & DB routing
 ├── vite.config.ts                # Vite configuration with Tailwind CSS & env definitions
 ├── package.json                  # Dependencies and build scripts
 └── README.md                     # Documentation
 ```
-
----
-
-# 📱 Responsive Design & Browser Support
-
-| Browser | Support |
-| :--- | :---: |
-| Google Chrome | ✅ |
-| Microsoft Edge | ✅ |
-| Mozilla Firefox | ✅ |
-| Apple Safari | ✅ |
-| Brave | ✅ |
-| Opera | ✅ |
-| Android Browsers | ✅ |
-| iOS Safari & Chrome | ✅ |
 
 ---
 

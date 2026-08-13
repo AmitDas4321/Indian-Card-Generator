@@ -1,7 +1,7 @@
 {
   "name": "tiranga-id-card",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
@@ -19,7 +19,9 @@
     "express": "^4.21.2",
     "firebase": "^12.17.1",
     "lucide-react": "^0.546.0",
+    "mongodb": "^7.5.0",
     "motion": "^12.23.24",
+    "mysql2": "^3.23.3",
     "qrcode": "^1.5.4",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
