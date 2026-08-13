@@ -1,5 +1,12 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import { CertificateRecord, DatabaseAdapter, DatabaseProvider } from './types';
+import {
+  CertificateQueryOptions,
+  CertificateQueryResult,
+  CertificateRecord,
+  DashboardStats,
+  DatabaseAdapter,
+  DatabaseProvider,
+} from './types';
 
 export class MongoDBAdapter implements DatabaseAdapter {
   readonly name: DatabaseProvider = 'mongodb';
@@ -150,6 +157,134 @@ export class MongoDBAdapter implements DatabaseAdapter {
       console.warn('[MongoDB] Error fetching card IDs:', err);
     }
     return usedSet;
+  }
+
+  async getCertificates(options?: CertificateQueryOptions): Promise<CertificateQueryResult> {
+    try {
+      const collection = await this.getCardsCollection();
+      const limit = Math.max(1, Math.min(options?.limit ?? 50, 200));
+      const offset = Math.max(0, options?.offset ?? 0);
+      const search = options?.search ? options.search.trim() : '';
+
+      let filter: any = {};
+      if (search) {
+        filter = {
+          $or: [
+            { id: { $regex: search, $options: 'i' } },
+            { name: { $regex: search, $options: 'i' } },
+            { phone: { $regex: search, $options: 'i' } },
+            { address: { $regex: search, $options: 'i' } },
+          ],
+        };
+      }
+
+      const total = await collection.countDocuments(filter);
+      const docs = await collection
+        .find(filter, { projection: { _id: 0 } })
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit)
+        .toArray();
+
+      const certificates: CertificateRecord[] = docs.map((doc: any) => ({
+        id: doc.id,
+        name: doc.name || '',
+        address: doc.address || '',
+        phone: doc.phone || '',
+        photo: doc.photo || null,
+        createdAt: doc.createdAt,
+        status: 'verified',
+      }));
+
+      return { certificates, total };
+    } catch (err) {
+      console.error('[MongoDB] Error querying certificates:', err);
+      return { certificates: [], total: 0 };
+    }
+  }
+
+  async getStats(): Promise<DashboardStats> {
+    const startTime = Date.now();
+    try {
+      const collection = await this.getCardsCollection();
+
+      const now = new Date();
+      const startOfTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const startOfWeekIso = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+      const startOfMonthIso = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+      const [total, verified, today, thisWeek, thisMonth, latestDoc] = await Promise.all([
+        collection.countDocuments({}),
+        collection.countDocuments({ status: 'verified' }),
+        collection.countDocuments({ createdAt: { $gte: startOfTodayIso } }),
+        collection.countDocuments({ createdAt: { $gte: startOfWeekIso } }),
+        collection.countDocuments({ createdAt: { $gte: startOfMonthIso } }),
+        collection.findOne({}, { sort: { createdAt: -1 }, projection: { _id: 0 } }),
+      ]);
+
+      const dbLatencyMs = Math.max(1, Date.now() - startTime);
+
+      const latestCertificate: CertificateRecord | null = latestDoc
+        ? {
+            id: latestDoc.id,
+            name: latestDoc.name || '',
+            address: latestDoc.address || '',
+            phone: latestDoc.phone || '',
+            photo: latestDoc.photo || null,
+            createdAt: latestDoc.createdAt,
+            status: 'verified',
+          }
+        : null;
+
+      const latestVerification = latestCertificate
+        ? {
+            id: latestCertificate.id,
+            timestamp: latestCertificate.createdAt,
+            name: latestCertificate.name,
+          }
+        : null;
+
+      return {
+        total,
+        verified,
+        today,
+        thisWeek,
+        thisMonth,
+        latestCertificate,
+        latestVerification,
+        dbProvider: 'mongodb',
+        dbStatus: 'connected',
+        dbLatencyMs,
+        apiStatus: 'healthy',
+      };
+    } catch (err) {
+      console.error('[MongoDB] Error fetching stats:', err);
+      const dbLatencyMs = Math.max(1, Date.now() - startTime);
+      return {
+        total: 0,
+        verified: 0,
+        today: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        latestCertificate: null,
+        latestVerification: null,
+        dbProvider: 'mongodb',
+        dbStatus: 'degraded',
+        dbLatencyMs,
+        apiStatus: 'healthy',
+      };
+    }
+  }
+
+  async checkHealth(): Promise<{ status: 'connected' | 'degraded' | 'fallback'; latencyMs: number }> {
+    const start = Date.now();
+    try {
+      const db = await this.getDb();
+      await db.command({ ping: 1 });
+      return { status: 'connected', latencyMs: Date.now() - start };
+    } catch {
+      return { status: 'degraded', latencyMs: Date.now() - start };
+    }
   }
 
   async close(): Promise<void> {

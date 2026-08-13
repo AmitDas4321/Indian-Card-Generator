@@ -10,6 +10,31 @@ export interface CertificateRecord {
   status: 'verified';
 }
 
+export interface DashboardStats {
+  total: number;
+  verified: number;
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+  latestCertificate: CertificateRecord | null;
+  latestVerification: { id: string; timestamp: string; name: string } | null;
+  dbProvider: DatabaseProvider;
+  dbStatus: 'connected' | 'degraded' | 'fallback';
+  dbLatencyMs: number;
+  apiStatus: 'healthy';
+}
+
+export interface CertificateQueryOptions {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CertificateQueryResult {
+  certificates: CertificateRecord[];
+  total: number;
+}
+
 export interface DatabaseAdapter {
   readonly name: DatabaseProvider;
   init(): Promise<void>;
@@ -19,5 +44,8 @@ export interface DatabaseAdapter {
   updateCertificate(id: string, updates: Partial<CertificateRecord>): Promise<CertificateRecord | null>;
   deleteCertificate(id: string): Promise<boolean>;
   fetchAllUsedSuffixesForLength(digitLength: number): Promise<Set<number>>;
+  getCertificates(options?: CertificateQueryOptions): Promise<CertificateQueryResult>;
+  getStats(): Promise<DashboardStats>;
+  checkHealth(): Promise<{ status: 'connected' | 'degraded' | 'fallback'; latencyMs: number }>;
   close?(): Promise<void>;
 }

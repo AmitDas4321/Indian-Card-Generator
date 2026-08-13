@@ -1,5 +1,12 @@
 import mysql, { Pool, RowDataPacket } from 'mysql2/promise';
-import { CertificateRecord, DatabaseAdapter, DatabaseProvider } from './types';
+import {
+  CertificateQueryOptions,
+  CertificateQueryResult,
+  CertificateRecord,
+  DashboardStats,
+  DatabaseAdapter,
+  DatabaseProvider,
+} from './types';
 
 export class MySQLAdapter implements DatabaseAdapter {
   readonly name: DatabaseProvider = 'mysql';
@@ -210,6 +217,169 @@ export class MySQLAdapter implements DatabaseAdapter {
       console.warn('[MySQL] Error fetching card IDs:', err);
     }
     return usedSet;
+  }
+
+  async getCertificates(options?: CertificateQueryOptions): Promise<CertificateQueryResult> {
+    await this.init();
+    const pool = this.getPool();
+    const limit = Math.max(1, Math.min(options?.limit ?? 50, 200));
+    const offset = Math.max(0, options?.offset ?? 0);
+    const search = options?.search ? options.search.trim() : '';
+
+    try {
+      if (search) {
+        const searchPattern = `%${search}%`;
+        const [rows] = await pool.execute<RowDataPacket[]>(
+          `SELECT id, name, address, phone, photo, status, createdAt
+           FROM cards
+           WHERE id LIKE ? OR name LIKE ? OR phone LIKE ? OR address LIKE ?
+           ORDER BY createdAt DESC
+           LIMIT ? OFFSET ?`,
+          [searchPattern, searchPattern, searchPattern, searchPattern, String(limit), String(offset)]
+        );
+
+        const [countRows] = await pool.execute<RowDataPacket[]>(
+          `SELECT COUNT(*) as total
+           FROM cards
+           WHERE id LIKE ? OR name LIKE ? OR phone LIKE ? OR address LIKE ?`,
+          [searchPattern, searchPattern, searchPattern, searchPattern]
+        );
+
+        const total = (countRows as any)[0]?.total || 0;
+        const certificates = (rows as any[]).map((r) => ({
+          id: r.id,
+          name: r.name || '',
+          address: r.address || '',
+          phone: r.phone || '',
+          photo: r.photo || null,
+          createdAt: r.createdAt,
+          status: 'verified' as const,
+        }));
+
+        return { certificates, total };
+      } else {
+        const [rows] = await pool.execute<RowDataPacket[]>(
+          `SELECT id, name, address, phone, photo, status, createdAt
+           FROM cards
+           ORDER BY createdAt DESC
+           LIMIT ? OFFSET ?`,
+          [String(limit), String(offset)]
+        );
+
+        const [countRows] = await pool.execute<RowDataPacket[]>('SELECT COUNT(*) as total FROM cards');
+        const total = (countRows as any)[0]?.total || 0;
+        const certificates = (rows as any[]).map((r) => ({
+          id: r.id,
+          name: r.name || '',
+          address: r.address || '',
+          phone: r.phone || '',
+          photo: r.photo || null,
+          createdAt: r.createdAt,
+          status: 'verified' as const,
+        }));
+
+        return { certificates, total };
+      }
+    } catch (err) {
+      console.error('[MySQL] Error querying certificates:', err);
+      return { certificates: [], total: 0 };
+    }
+  }
+
+  async getStats(): Promise<DashboardStats> {
+    await this.init();
+    const startTime = Date.now();
+    const pool = this.getPool();
+
+    const now = new Date();
+    const startOfTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const startOfWeekIso = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+    const startOfMonthIso = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    try {
+      const [statsRows] = await pool.execute<RowDataPacket[]>(
+        `SELECT
+           COUNT(*) as total,
+           SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
+           SUM(CASE WHEN createdAt >= ? THEN 1 ELSE 0 END) as today,
+           SUM(CASE WHEN createdAt >= ? THEN 1 ELSE 0 END) as thisWeek,
+           SUM(CASE WHEN createdAt >= ? THEN 1 ELSE 0 END) as thisMonth
+         FROM cards`,
+        [startOfTodayIso, startOfWeekIso, startOfMonthIso]
+      );
+
+      const [latestRows] = await pool.execute<RowDataPacket[]>(
+        `SELECT id, name, address, phone, photo, status, createdAt
+         FROM cards
+         ORDER BY createdAt DESC
+         LIMIT 1`
+      );
+
+      const dbLatencyMs = Math.max(1, Date.now() - startTime);
+      const row = (statsRows as any[])[0] || {};
+      const latestRow = (latestRows as any[])[0] || null;
+
+      const latestCertificate: CertificateRecord | null = latestRow
+        ? {
+            id: latestRow.id,
+            name: latestRow.name || '',
+            address: latestRow.address || '',
+            phone: latestRow.phone || '',
+            photo: latestRow.photo || null,
+            createdAt: latestRow.createdAt,
+            status: 'verified',
+          }
+        : null;
+
+      const latestVerification = latestCertificate
+        ? {
+            id: latestCertificate.id,
+            timestamp: latestCertificate.createdAt,
+            name: latestCertificate.name,
+          }
+        : null;
+
+      return {
+        total: Number(row.total || 0),
+        verified: Number(row.verified || 0),
+        today: Number(row.today || 0),
+        thisWeek: Number(row.thisWeek || 0),
+        thisMonth: Number(row.thisMonth || 0),
+        latestCertificate,
+        latestVerification,
+        dbProvider: 'mysql',
+        dbStatus: 'connected',
+        dbLatencyMs,
+        apiStatus: 'healthy',
+      };
+    } catch (err) {
+      console.error('[MySQL] Error getting stats:', err);
+      const dbLatencyMs = Math.max(1, Date.now() - startTime);
+      return {
+        total: 0,
+        verified: 0,
+        today: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        latestCertificate: null,
+        latestVerification: null,
+        dbProvider: 'mysql',
+        dbStatus: 'degraded',
+        dbLatencyMs,
+        apiStatus: 'healthy',
+      };
+    }
+  }
+
+  async checkHealth(): Promise<{ status: 'connected' | 'degraded' | 'fallback'; latencyMs: number }> {
+    const start = Date.now();
+    try {
+      const pool = this.getPool();
+      await pool.query('SELECT 1');
+      return { status: 'connected', latencyMs: Date.now() - start };
+    } catch {
+      return { status: 'degraded', latencyMs: Date.now() - start };
+    }
   }
 
   async close(): Promise<void> {

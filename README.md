@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <strong>A modern, full-stack, multi-database, secure, and privacy-first browser-based card generator & online verification portal with a beautiful Indian-inspired design.</strong>
+  <strong>A modern, full-stack, multi-database, secure, and privacy-first browser-based card generator, online verification portal, and secure admin management panel with a beautiful Indian-inspired design.</strong>
 </p>
 
 <p align="center">
@@ -27,6 +27,7 @@
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Express-4-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
   <img src="https://img.shields.io/badge/Multi--DB-Firebase%20%7C%20MySQL%20%7C%20MongoDB-4479A1?style=flat-square" alt="Multi-DB Support">
+  <img src="https://img.shields.io/badge/Admin%20Panel-Secure%20%2Fadmin-FF9933?style=flat-square" alt="Admin Panel">
   <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/TailwindCSS-4-38BDF8?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
   <img src="https://img.shields.io/badge/HMAC--SHA256-Security-00C7B7?style=flat-square" alt="HMAC SHA256">
@@ -36,11 +37,11 @@
 
 # 🇮🇳 About
 
-**Indian Card Generator** is a full-stack identity-style card creation suite and verification system designed with an Indian visual aesthetic.
+**Indian Card Generator** is a full-stack identity-style card creation suite, online verification system, and secure administrative management platform designed with a refined Indian visual aesthetic.
 
 It allows users to generate customizable, high-resolution identity-style cards directly in the browser with personal details, custom photo uploads, dynamic QR codes, and Ashoka Chakra decorative elements.
 
-In addition to client-side HD rendering, it includes a robust **server-side API with HMAC-SHA256 request signing, anti-replay nonce protection, multi-database pluggable persistence (Firebase Realtime Database, MySQL, MongoDB), and an instant Online Verification Portal**.
+In addition to client-side HD rendering, it includes a robust **server-side API with HMAC-SHA256 request signing, multi-database pluggable persistence (Firebase Realtime Database, MySQL, MongoDB), an instant Online Verification Portal, and an isolated Secure Admin Panel (`/admin`)**.
 
 > ⚠️ **IMPORTANT DISCLAIMER**
 >
@@ -54,7 +55,7 @@ In addition to client-side HD rendering, it includes a robust **server-side API 
 
 # 🌟 Experience & Workflow
 
-The card creation and verification process is intuitive, responsive, and secure:
+The card creation, verification, and administrative workflow is intuitive, responsive, and secure:
 
 ```text
  📝 Enter Card Details & Upload Photo
@@ -77,11 +78,34 @@ The card creation and verification process is intuitive, responsive, and secure:
                │
                ▼
  🔍 Instant Online Verification via /verify/:id or QR Scanner
+               │
+               ▼
+ 🛡️ Secure Admin Control Panel at /admin (Real-Time Stats & Management)
 ```
 
 ---
 
 # ✨ Features
+
+### 🛡️ Secure Admin Panel (`/admin`)
+* 🔒 **Server-Side Authentication**: Master password authentication authenticated strictly on the server through `ADMIN_PASSWORD` in `.env`. Password is never hardcoded and never exposed to the frontend.
+* ⏱️ **Brute-Force & Rate-Limit Defense**: Sliding window rate limiting on login attempts with automatic 15-minute lockouts after 5 consecutive failures.
+* 🛡️ **Constant-Time Verification**: Uses `crypto.timingSafeEqual` SHA-256 digest comparison to prevent timing attacks.
+* 🍪 **Secure Session Tokens & Cookies**: Cryptographically secure 256-bit session tokens stored in `HttpOnly`, `SameSite=Lax` cookies with dual Bearer token fallback.
+* 📊 **Real-Time Statistics Dashboard**:
+  - Total cards/certificates issued.
+  - Total verified certificates.
+  - Today's, weekly, and monthly generation counts.
+  - Active database engine indicator (`Firebase`, `MySQL`, or `MongoDB`).
+  - Real-time database query latency (ms) and connection state.
+  - API & security health monitoring.
+  - Latest generated certificate with full details.
+* 🔍 **Certificate Management & Search**:
+  - Live search filtering by Certificate ID (`IND-2026-####`), Name, Phone, or Address.
+  - 1-click ID copy and Verification URL copy.
+  - Certificate detail inspector modal with full metadata and photo previews.
+  - Safe record deletion with confirmation safeguards.
+* 🚫 **Zero `system_config` Storage**: Admin system stores zero configuration or credentials in the database, preserving a clean schema focused purely on the `cards` entity.
 
 ### 🗄️ Multi-Database Support (Plug-and-Play)
 Switch between enterprise database engines without any frontend modifications simply by setting the `DATABASE_PROVIDER` environment variable:
@@ -153,12 +177,13 @@ White           #FFFFFF
 | :--- | :--- |
 | **React 19** | Modern UI components and reactive state management |
 | **TypeScript 5** | Strict end-to-end type safety |
-| **Express 4** | Full-stack backend API server and security middlewares |
+| **Express 4** | Full-stack backend API server, session handling, and security middlewares |
+| **Cookie-Parser** | Secure HTTP-only session cookie management |
 | **Multi-DB Engine** | Pluggable database abstraction for Firebase RTDB, MySQL, and MongoDB |
 | **Vite 6** | Lightning-fast development server & asset bundling |
 | **Tailwind CSS 4** | Utility-first responsive styling and dark mode |
 | **HTML5 Canvas** | High-DPI 1600 × 1000 px card rendering engine |
-| **Node.js Crypto** | HMAC-SHA256 cryptographic signing and timing-safe checks |
+| **Node.js Crypto** | HMAC-SHA256 cryptographic signing and constant-time authentication |
 | **QRCode** | Dynamic QR code generation for verification URLs |
 | **Canvas Confetti** | Download celebration particle animations |
 | **Lucide React** | Refined interface iconography |
@@ -209,8 +234,8 @@ The backend utilizes a clean Adapter pattern allowing effortless switching betwe
 
 # 🔐 API & Security Architecture
 
-### 1. Canonical Signing Format
-Every request to the `/api/*` backend must supply the following headers:
+### 1. Canonical Signing Format (Public API)
+Every request to the `/api/*` public certificate backend must supply the following headers:
 * `X-API-Key`: Configured API key.
 * `X-Timestamp`: Current unix timestamp in milliseconds.
 * `X-Nonce`: Random unique string per request.
@@ -223,14 +248,26 @@ ${METHOD}:${PATH}:${X-Timestamp}:${X-Nonce}:${REQUEST_BODY}
 
 ### 2. Available API Endpoints
 
+#### Public & Verification Endpoints:
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/api/health` | Service health & active database provider check | No |
-| `GET` | `/api/next-id` | Retrieves the next preview unique ID (`IND-2026-####`) | Yes |
-| `POST` | `/api/certificates` | Stores and signs a new certificate record in the active database (returns `409` on duplicate ID) | Yes |
-| `GET` | `/api/certificates/:id` | Fetches a card record by ID for verification | Yes |
-| `PUT` | `/api/certificates/:id` | Updates a card record in the active database | Yes |
-| `DELETE` | `/api/certificates/:id` | Deletes a card record from the active database | Yes |
+| `GET` | `/api/health` | Service health & active database provider check | Public |
+| `GET` | `/api/next-id` | Retrieves the next preview unique ID (`IND-2026-####`) | HMAC-SHA256 |
+| `POST` | `/api/certificates` | Stores and signs a new certificate record in the active database (returns `409` on duplicate ID) | HMAC-SHA256 |
+| `GET` | `/api/certificates/:id` | Fetches a card record by ID for verification | HMAC-SHA256 |
+| `PUT` | `/api/certificates/:id` | Updates a card record in the active database | HMAC-SHA256 |
+| `DELETE` | `/api/certificates/:id` | Deletes a card record from the active database | HMAC-SHA256 |
+
+#### Admin Endpoints:
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/admin/login` | Authenticates admin using `ADMIN_PASSWORD` (rate-limited) | Password Body |
+| `POST` | `/api/admin/logout` | Invalidates active admin session & clears cookie | Admin Session |
+| `GET` | `/api/admin/check-auth` | Validates session status and database provider | Admin Session / Cookie |
+| `GET` | `/api/admin/stats` | Retrieves real-time metrics, counts, and DB health | Admin Session / Cookie |
+| `GET` | `/api/admin/certificates` | Paginated search & list of stored certificates | Admin Session / Cookie |
+| `GET` | `/api/admin/certificates/:id` | Detailed certificate metadata lookup | Admin Session / Cookie |
+| `DELETE` | `/api/admin/certificates/:id` | Removes certificate record from active database | Admin Session / Cookie |
 
 ---
 
@@ -242,6 +279,9 @@ Configure these variables in your `.env` file (refer to `.env.example`):
 # Application
 APP_URL=https://example.com
 VERIFICATION_BASE_URL=https://indian-card-verify.blueorbitdevs.workers.dev
+
+# Admin Authentication (Server-Side Only)
+ADMIN_PASSWORD=your_secure_admin_password
 
 # Select database: 'firebase' | 'mysql' | 'mongodb'
 DATABASE_PROVIDER=firebase
@@ -287,7 +327,7 @@ npm install
 
 ```bash
 cp .env.example .env
-# Edit .env and supply your credentials and DATABASE_PROVIDER (firebase | mysql | mongodb)
+# Edit .env and supply your credentials, ADMIN_PASSWORD, and DATABASE_PROVIDER (firebase | mysql | mongodb)
 ```
 
 ### 4. Start Development Server
@@ -299,6 +339,10 @@ npm run dev
 Open your browser at:
 ```text
 http://localhost:3000
+```
+To access the Admin Portal:
+```text
+http://localhost:3000/admin
 ```
 
 ---
@@ -335,21 +379,26 @@ npm run start
 Indian-Card-Generator/
 ├── src/
 │   ├── components/
+│   │   ├── admin/
+│   │   │   ├── AdminDashboard.tsx# Real-time metrics, search, and management
+│   │   │   ├── AdminLogin.tsx    # Brute-force protected admin login card
+│   │   │   └── AdminPage.tsx     # Admin route state and session controller
 │   │   ├── CardForm.tsx          # Card detail input controls & validation
 │   │   ├── CardPreview.tsx       # Live interactive canvas card preview
 │   │   ├── DownloadButton.tsx    # HD PNG export and celebration trigger
-│   │   ├── Footer.tsx            # Application footer and branding
-│   │   ├── Header.tsx            # Navigation, dark mode toggle, and portal link
+│   │   ├── Footer.tsx            # Application footer and portal links
+│   │   ├── Header.tsx            # Navigation, dark mode, and security badges
 │   │   ├── PhotoUploader.tsx     # Local photo upload & aspect cropper
 │   │   ├── SocialPromo.tsx       # Social share and community widget
 │   │   └── VerificationPage.tsx  # /verify/:id Certificate Verification Portal
 │   ├── services/
 │   │   ├── database/             # Multi-Database Abstraction Layer
-│   │   │   ├── types.ts          # Common Database Adapter interfaces
+│   │   │   ├── types.ts          # Common Database Adapter interfaces & stats types
 │   │   │   ├── firebase.ts       # Firebase Realtime Database Adapter (/cards/{id})
 │   │   │   ├── mysql.ts          # MySQL Connection Pool Adapter (`cards` table)
 │   │   │   ├── mongodb.ts        # MongoDB MongoClient Adapter (`cards` collection)
 │   │   │   └── index.ts          # Unified Database Provider & ID Generator Engine
+│   │   ├── adminService.ts       # Admin client API service (auth, stats, CRUD)
 │   │   ├── certificateService.ts # Client API connector to backend
 │   │   ├── firebaseCertificate.ts# Backwards-compatible service proxy
 │   │   └── localCardStorage.ts   # Offline-safe local cache manager
@@ -358,11 +407,11 @@ Indian-Card-Generator/
 │   │   ├── cardRenderer.ts       # 1600x1000px HTML5 Canvas rendering engine
 │   │   ├── confetti.ts           # Confetti celebration animations
 │   │   └── validation.ts         # Input validation helpers
-│   ├── App.tsx                   # Main router and view manager
+│   ├── App.tsx                   # Main router (/ , /verify/:id , /admin)
 │   ├── index.css                 # Tailwind CSS styles
 │   ├── main.tsx                  # React DOM root
 │   └── types.ts                  # TypeScript interfaces & types
-├── server.ts                     # Express server, HMAC verification & DB routing
+├── server.ts                     # Express server, Admin API, HMAC & DB routing
 ├── vite.config.ts                # Vite configuration with Tailwind CSS & env definitions
 ├── package.json                  # Dependencies and build scripts
 └── README.md                     # Documentation

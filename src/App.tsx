@@ -6,6 +6,7 @@ import { DownloadButton } from './components/DownloadButton';
 import { SocialPromo } from './components/SocialPromo';
 import { Footer } from './components/Footer';
 import { VerificationPage } from './components/VerificationPage';
+import { AdminPage } from './components/admin/AdminPage';
 import { CardData, FormErrors } from './types';
 import { validateCardData } from './utils/validation';
 import { getNextSequencePreview } from './services/firebaseCertificate';
@@ -21,20 +22,26 @@ const INITIAL_DATA: CardData = {
 
 type RouteState =
   | { view: 'home' }
-  | { view: 'verify'; id: string };
+  | { view: 'verify'; id: string; fromAdmin?: boolean }
+  | { view: 'admin' };
 
 function parseCurrentRoute(): RouteState {
   if (typeof window === 'undefined') return { view: 'home' };
 
   const path = window.location.pathname;
+
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return { view: 'admin' };
+  }
+
   if (path.startsWith('/verify')) {
     const parts = path.split('/').filter(Boolean);
     // e.g. /verify/IND-2026-7890 -> parts = ['verify', 'IND-2026-7890']
-    if (parts.length >= 2) {
-      return { view: 'verify', id: parts[1] };
-    }
-    return { view: 'verify', id: '' };
+    const id = parts.length >= 2 ? parts[1] : '';
+    const fromAdmin = Boolean(window.history?.state?.fromAdmin);
+    return { view: 'verify', id, fromAdmin };
   }
+
   return { view: 'home' };
 }
 
@@ -88,16 +95,21 @@ export default function App() {
       });
   }, [isLocked]);
 
-  const navigateToVerify = (id: string) => {
+  const navigateToVerify = (id: string, fromAdmin: boolean = false) => {
     const cleanId = id.trim();
     const targetUrl = cleanId ? `/verify/${cleanId}` : '/verify';
-    window.history.pushState({}, '', targetUrl);
-    setRoute({ view: 'verify', id: cleanId });
+    window.history.pushState({ fromAdmin }, '', targetUrl);
+    setRoute({ view: 'verify', id: cleanId, fromAdmin });
   };
 
   const navigateToHome = () => {
     window.history.pushState({}, '', '/');
     setRoute({ view: 'home' });
+  };
+
+  const navigateToAdmin = () => {
+    window.history.pushState({}, '', '/admin');
+    setRoute({ view: 'admin' });
   };
 
   const handleCardDataChange = (newData: CardData) => {
@@ -134,13 +146,25 @@ export default function App() {
     setErrors({});
   };
 
+  // Render Admin View
+  if (route.view === 'admin') {
+    return (
+      <AdminPage
+        onNavigateHome={navigateToHome}
+        onNavigateVerify={(id) => navigateToVerify(id, true)}
+      />
+    );
+  }
+
   // Render Verification View
   if (route.view === 'verify') {
     return (
       <VerificationPage
         initialId={route.id}
+        fromAdmin={route.fromAdmin}
         onNavigateHome={navigateToHome}
-        onNavigateVerify={navigateToVerify}
+        onNavigateAdmin={navigateToAdmin}
+        onNavigateVerify={(id) => navigateToVerify(id, route.fromAdmin)}
       />
     );
   }
@@ -184,8 +208,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateAdmin={navigateToAdmin} />
     </div>
   );
 }
-

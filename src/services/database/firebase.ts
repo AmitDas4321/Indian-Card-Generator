@@ -1,4 +1,11 @@
-import { CertificateRecord, DatabaseAdapter, DatabaseProvider } from './types';
+import {
+  CertificateQueryOptions,
+  CertificateQueryResult,
+  CertificateRecord,
+  DashboardStats,
+  DatabaseAdapter,
+  DatabaseProvider,
+} from './types';
 
 export class FirebaseAdapter implements DatabaseAdapter {
   readonly name: DatabaseProvider = 'firebase';
@@ -194,5 +201,139 @@ export class FirebaseAdapter implements DatabaseAdapter {
     }
 
     return usedSet;
+  }
+
+  private async fetchAllRecords(): Promise<CertificateRecord[]> {
+    const recordsMap = new Map<string, CertificateRecord>();
+
+    // Add in-memory items first
+    for (const [id, rec] of this.memoryStore.entries()) {
+      recordsMap.set(id, rec);
+    }
+
+    const endpoint = this.getFirebaseEndpoint('cards.json');
+    if (endpoint) {
+      try {
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object') {
+            for (const [id, val] of Object.entries(data)) {
+              if (val && typeof val === 'object') {
+                const rec = val as any;
+                recordsMap.set(id, {
+                  id: rec.id || id,
+                  name: rec.name || '',
+                  address: rec.address || '',
+                  phone: rec.phone || '',
+                  photo: rec.photo || null,
+                  createdAt: rec.createdAt || new Date().toISOString(),
+                  status: 'verified',
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[Firebase] Error loading all records for query:', err);
+      }
+    }
+
+    return Array.from(recordsMap.values()).sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+
+  async getCertificates(options?: CertificateQueryOptions): Promise<CertificateQueryResult> {
+    const all = await this.fetchAllRecords();
+    const search = options?.search ? options.search.trim().toLowerCase() : '';
+
+    let filtered = all;
+    if (search) {
+      filtered = all.filter(
+        (c) =>
+          c.id.toLowerCase().includes(search) ||
+          c.name.toLowerCase().includes(search) ||
+          c.phone.toLowerCase().includes(search) ||
+          c.address.toLowerCase().includes(search)
+      );
+    }
+
+    const total = filtered.length;
+    const limit = options?.limit ?? 50;
+    const offset = options?.offset ?? 0;
+    const certificates = filtered.slice(offset, offset + limit);
+
+    return { certificates, total };
+  }
+
+  async getStats(): Promise<DashboardStats> {
+    const startTime = Date.now();
+    const all = await this.fetchAllRecords();
+    const dbLatencyMs = Math.max(1, Date.now() - startTime);
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).getTime();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    let verified = 0;
+    let today = 0;
+    let thisWeek = 0;
+    let thisMonth = 0;
+
+    for (const item of all) {
+      if (item.status === 'verified') verified++;
+      const itemTime = new Date(item.createdAt).getTime();
+      if (!isNaN(itemTime)) {
+        if (itemTime >= startOfToday) today++;
+        if (itemTime >= startOfWeek) thisWeek++;
+        if (itemTime >= startOfMonth) thisMonth++;
+      }
+    }
+
+    const latest = all.length > 0 ? all[0] : null;
+    const latestVerification = latest
+      ? {
+          id: latest.id,
+          timestamp: latest.createdAt,
+          name: latest.name,
+        }
+      : null;
+
+    const hasUrl = Boolean(this.getRtdbUrl());
+
+    return {
+      total: all.length,
+      verified,
+      today,
+      thisWeek,
+      thisMonth,
+      latestCertificate: latest,
+      latestVerification,
+      dbProvider: 'firebase',
+      dbStatus: hasUrl ? 'connected' : 'fallback',
+      dbLatencyMs,
+      apiStatus: 'healthy',
+    };
+  }
+
+  async checkHealth(): Promise<{ status: 'connected' | 'degraded' | 'fallback'; latencyMs: number }> {
+    const start = Date.now();
+    const endpoint = this.getFirebaseEndpoint('.json?shallow=true');
+    if (!endpoint) {
+      return { status: 'fallback', latencyMs: 1 };
+    }
+
+    try {
+      const res = await fetch(endpoint);
+      const latency = Date.now() - start;
+      if (res.ok) {
+        return { status: 'connected', latencyMs: latency };
+      }
+      return { status: 'degraded', latencyMs: latency };
+    } catch {
+      return { status: 'fallback', latencyMs: Date.now() - start };
+    }
   }
 }

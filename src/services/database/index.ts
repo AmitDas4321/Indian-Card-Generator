@@ -1,4 +1,11 @@
-import { DatabaseAdapter, DatabaseProvider, CertificateRecord } from './types';
+import {
+  DatabaseAdapter,
+  DatabaseProvider,
+  CertificateRecord,
+  CertificateQueryOptions,
+  CertificateQueryResult,
+  DashboardStats,
+} from './types';
 import { FirebaseAdapter } from './firebase';
 import { MySQLAdapter } from './mysql';
 import { MongoDBAdapter } from './mongodb';
@@ -79,6 +86,30 @@ export async function certificateExists(id: string): Promise<boolean> {
 export async function getCertificateById(id: string): Promise<CertificateRecord | null> {
   const db = getDatabase();
   return db.getCertificateById(id);
+}
+
+/**
+ * Retrieves a list of certificates with optional search and pagination.
+ */
+export async function getCertificates(options?: CertificateQueryOptions): Promise<CertificateQueryResult> {
+  const db = getDatabase();
+  return db.getCertificates(options);
+}
+
+/**
+ * Retrieves full dashboard statistics directly from active database cards.
+ */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const db = getDatabase();
+  return db.getStats();
+}
+
+/**
+ * Checks connectivity status and latency of the current database.
+ */
+export async function checkDatabaseHealth(): Promise<{ status: 'connected' | 'degraded' | 'fallback'; latencyMs: number }> {
+  const db = getDatabase();
+  return db.checkHealth();
 }
 
 /**

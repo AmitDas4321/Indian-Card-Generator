@@ -27,13 +27,17 @@ import { triggerSuccessConfetti } from '../utils/confetti';
 
 interface VerificationPageProps {
   initialId?: string;
+  fromAdmin?: boolean;
   onNavigateHome: () => void;
+  onNavigateAdmin?: () => void;
   onNavigateVerify: (id: string) => void;
 }
 
 export const VerificationPage: React.FC<VerificationPageProps> = ({
   initialId = '',
+  fromAdmin = false,
   onNavigateHome,
+  onNavigateAdmin,
   onNavigateVerify,
 }) => {
   const [searchInput, setSearchInput] = useState(initialId);
@@ -154,6 +158,14 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
     }
   };
 
+  const handleBack = () => {
+    if (fromAdmin && onNavigateAdmin) {
+      onNavigateAdmin();
+    } else {
+      onNavigateHome();
+    }
+  };
+
   const formatDate = (isoStr?: string) => {
     if (!isoStr) return 'N/A';
     try {
@@ -196,9 +208,9 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
 
                 <button
                   type="button"
-                  onClick={onNavigateHome}
+                  onClick={handleBack}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-[#dfe2e8] hover:text-[#ff9800] dark:hover:text-[#ff9800] bg-slate-100 hover:bg-slate-200 dark:bg-[#172238] dark:hover:bg-[#26344d] border border-slate-200 dark:border-[#26344d] rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#ff9800] outline-none cursor-pointer shrink-0"
-                  title="Back to Generator"
+                  title="Back"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back</span>
@@ -456,7 +468,7 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateAdmin={onNavigateAdmin} />
     </div>
   );
 };
