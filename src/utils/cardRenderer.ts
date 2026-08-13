@@ -2,20 +2,19 @@ import QRCode from 'qrcode';
 import { CardData } from '../types';
 
 /**
- * Generates a high-contrast QR code image from the card data.
+ * Generates a high-contrast QR code image containing the path-based verification URL.
  */
 async function generateQRCodeImage(data: CardData): Promise<HTMLImageElement | null> {
-  const payloadLines = [
-    data.idNumber ? `ID: ${data.idNumber.trim()}` : '',
-    data.name ? `Name: ${data.name.trim()}` : '',
-    data.phoneNumber ? `Phone: ${data.phoneNumber.trim()}` : '',
-    data.address ? `Address: ${data.address.trim()}` : ''
-  ].filter(Boolean);
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://indian-card-generator.web.app';
 
-  const qrText = payloadLines.length > 0 ? payloadLines.join('\n') : 'TIRANGA-ID-CARD-2026';
+  const cleanId = (data.idNumber || 'IND-2026-7890').trim();
+  const verifyUrl = `${origin}/verify/${cleanId}`;
 
   try {
-    const dataUrl = await QRCode.toDataURL(qrText, {
+    const dataUrl = await QRCode.toDataURL(verifyUrl, {
       margin: 1,
       width: 400,
       color: {
@@ -216,10 +215,10 @@ export async function renderCardToCanvas(
   ctx.clearRect(0, 0, 1600, 1000);
 
   // Load external assets in parallel
-  const satyaImgPromise = loadImageSafe('./assets/satya1.png', 4000);
-  const xbLogoPromise = loadImageSafe('./assets/brand-logo.png', 4000);
-  const tirangaImgPromise = loadImageSafe('./assets/tiranga photo.png', 4000);
-  const bgImgPromise = loadImageSafe('./assets/card_bg.jpg', 4000);
+  const satyaImgPromise = loadImageSafe('/assets/satya1.png', 4000);
+  const xbLogoPromise = loadImageSafe('/assets/brand-logo.png', 4000);
+  const tirangaImgPromise = loadImageSafe('/assets/tiranga photo.png', 4000);
+  const bgImgPromise = loadImageSafe('/assets/card_bg.jpg', 4000);
   const qrImgPromise = generateQRCodeImage(data);
 
   let userPhotoImg: HTMLImageElement | null = null;

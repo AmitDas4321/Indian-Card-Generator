@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-[#ff9800] hover:underline font-bold transition-colors whitespace-nowrap"
           >
             <img
-              src="./assets/brand-logo.png"
+              src="/assets/brand-logo.png"
               alt="BlueOrbit Devs Logo"
               className="w-4 h-4 object-contain shrink-0"
               referrerPolicy="no-referrer"

@@ -164,7 +164,7 @@ export const CardForm: React.FC<CardFormProps> = ({
           )}
         </div>
 
-        {/* ID Number Input */}
+        {/* ID Number Input (Auto-generated / Read-Only) */}
         <div className="space-y-1">
           <label htmlFor="id-input" className="block text-xs font-semibold text-slate-700 dark:text-[#dfe2e8]">
             ID No. <span className="text-[#ff9800]">*</span>
@@ -175,11 +175,11 @@ export const CardForm: React.FC<CardFormProps> = ({
             name="idNumber"
             autoComplete="off"
             type="text"
+            readOnly
             value={data.idNumber}
-            onChange={(e) => handleChange('idNumber', e.target.value)}
             placeholder="IND-2026-7890"
-            className={`w-full h-10 px-3 bg-slate-50 dark:bg-[#0a1020] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none focus:border-[#ff9800] focus:ring-1 focus:ring-[#ff9800] ${
-              errors.idNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d] hover:border-slate-300 dark:hover:border-[#37496d]'
+            className={`w-full h-10 px-3 bg-slate-100/80 dark:bg-[#0a1020]/80 font-mono text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#9aa3b5]/60 rounded-xl border transition-all outline-none cursor-not-allowed ${
+              errors.idNumber ? 'border-red-500/80 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-[#26344d]'
             }`}
           />
           {errors.idNumber && (
