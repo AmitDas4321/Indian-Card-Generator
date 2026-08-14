@@ -208,17 +208,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Active Database Badge */}
-            {stats && (
-              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0B1426] border border-slate-800 text-xs">
-                <Database className="w-3.5 h-3.5 text-[#FF9933]" />
-                <span className="text-slate-400 font-medium">DB:</span>
-                <span className="text-white font-bold uppercase tracking-wider">
-                  {stats.dbProvider}
-                </span>
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-1" />
-              </div>
-            )}
+            {/* Active Database Badge with stylish blur loading */}
+            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0B1426] border border-slate-800 text-xs relative overflow-hidden transition-all duration-300 ${loadingStats ? 'border-amber-500/30' : ''}`}>
+              {loadingStats && (
+                <div className="absolute inset-0 stylish-blur-shimmer pointer-events-none" />
+              )}
+              <Database className={`w-3.5 h-3.5 text-[#FF9933] transition-transform duration-300 ${loadingStats ? 'rotate-12' : ''}`} />
+              <span className="text-slate-400 font-medium">DB:</span>
+              <span className={`font-bold uppercase tracking-wider transition-all duration-300 ${loadingStats ? 'filter blur-[3px] opacity-40 text-amber-300' : 'filter blur-0 opacity-100 text-white'}`}>
+                {stats?.dbProvider || 'firebase'}
+              </span>
+              <span className={`inline-block w-2 h-2 rounded-full transition-colors duration-300 ml-1 ${loadingStats ? 'bg-amber-400 animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
+            </div>
 
             {/* Refresh Button */}
             <button
@@ -294,15 +295,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </h2>
             <span className="text-xs text-slate-400">
               Active Provider:{' '}
-              <strong className="text-[#FF9933] uppercase">
+              <strong className={`uppercase transition-all duration-300 ${loadingStats ? 'filter blur-[3px] opacity-40 text-amber-300' : 'filter blur-0 opacity-100 text-[#FF9933]'}`}>
                 {stats?.dbProvider || 'firebase'}
               </strong>
             </span>
           </div>
 
           {/* Container with smooth blur effect when loading */}
-          <div className="relative">
-            <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 transition-all duration-300 ${loadingStats ? 'filter blur-[3px] opacity-60 pointer-events-none' : 'filter blur-0 opacity-100'}`}>
+          <div className="relative rounded-2xl overflow-hidden">
+            {loadingStats && (
+              <div className="absolute inset-0 z-10 pointer-events-none stylish-blur-shimmer backdrop-blur-[4px] bg-slate-950/20 transition-all duration-500" />
+            )}
+            <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 transition-all duration-500 ease-out ${loadingStats ? 'filter blur-[4px] opacity-50 scale-[0.995] pointer-events-none' : 'filter blur-0 opacity-100 scale-100'}`}>
               {/* Total Cards */}
               <div className="bg-[#0B1224] border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-lg">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -374,8 +378,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* ------------------------------------------------------------- */}
         {/* SYSTEM STATUS & RECENT ACTIVITY DUAL CARDS */}
         {/* ------------------------------------------------------------- */}
-        <div className="relative">
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${loadingStats ? 'filter blur-[3px] opacity-60 pointer-events-none' : 'filter blur-0 opacity-100'}`}>
+        <div className="relative rounded-2xl overflow-hidden">
+          {loadingStats && (
+            <div className="absolute inset-0 z-10 pointer-events-none stylish-blur-shimmer backdrop-blur-[4px] bg-slate-950/20 transition-all duration-500" />
+          )}
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-500 ease-out ${loadingStats ? 'filter blur-[4px] opacity-50 scale-[0.995] pointer-events-none' : 'filter blur-0 opacity-100 scale-100'}`}>
             {/* Database & Infrastructure Status */}
             <div className="bg-[#0B1224] border border-slate-800 rounded-2xl p-5 shadow-lg">
               <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2 mb-3">
@@ -512,9 +519,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
-          {/* Table Container with blur loading effect */}
-          <div className="relative">
-            <div className={`overflow-x-auto transition-all duration-300 ${loadingList ? 'filter blur-[3px] opacity-60 pointer-events-none select-none' : 'filter blur-0 opacity-100'}`}>
+          {/* Table Container with stylish blur loading effect */}
+          <div className="relative overflow-hidden">
+            {loadingList && (
+              <div className="absolute inset-0 z-10 pointer-events-none stylish-blur-shimmer backdrop-blur-[4px] bg-slate-950/20 transition-all duration-500" />
+            )}
+            <div className={`overflow-x-auto transition-all duration-500 ease-out ${loadingList ? 'filter blur-[4px] opacity-50 pointer-events-none select-none' : 'filter blur-0 opacity-100'}`}>
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead className="bg-[#070D1B] text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider font-semibold">
                   <tr>
