@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import {
   initDatabase,
   getDatabaseProvider,
+  checkDatabaseHealth,
   createCertificate,
   getCertificateById,
   updateCertificate,
@@ -134,10 +135,23 @@ function getClientIp(req: express.Request): string {
 // ---------------------------------------------------------------------------
 // PUBLIC HEALTH CHECK
 // ---------------------------------------------------------------------------
-app.get('/api/health', (_req, res) => {
-  res.json({
+app.get('/api/health', async (_req, res) => {
+  let dbStatus: 'connected' | 'disconnected' = 'disconnected';
+
+  try {
+    const health = await checkDatabaseHealth();
+    if (health.status === 'connected') {
+      dbStatus = 'connected';
+    }
+  } catch (err) {
+    console.warn('[Health Check] Database health check failed:', err);
+    dbStatus = 'disconnected';
+  }
+
+  res.status(200).json({
     status: 'ok',
-    databaseProvider: getDatabaseProvider(),
+    service: 'Indian Card Generator',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
 });
