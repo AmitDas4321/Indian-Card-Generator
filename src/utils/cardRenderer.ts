@@ -2,13 +2,39 @@ import QRCode from 'qrcode';
 import { CardData } from '../types';
 
 /**
- * Resolves the verification base URL from environment variables, falling back to window.location.origin.
+ * Resolves the verification base URL from runtime server config, environment variables, or window.location.origin.
  */
 export function getVerificationBaseUrl(): string {
-  const envUrl =
-    (import.meta as any).env?.VITE_VERIFICATION_BASE_URL ||
-    (typeof process !== 'undefined' ? (process.env as any)?.VERIFICATION_BASE_URL : '') ||
-    (typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '');
+  let envUrl = '';
+
+  // 1. Check runtime window configuration injected by server (HTML hydration)
+  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__?.VERIFICATION_BASE_URL) {
+    const raw = (window as any).__APP_CONFIG__.VERIFICATION_BASE_URL;
+    if (typeof raw === 'string' && raw.trim()) {
+      envUrl = raw.trim();
+    }
+  }
+
+  // 2. Check Vite build-time environment variable
+  if (!envUrl) {
+    const viteEnv = (import.meta as any).env?.VITE_VERIFICATION_BASE_URL;
+    if (typeof viteEnv === 'string' && viteEnv.trim()) {
+      envUrl = viteEnv.trim();
+    }
+  }
+
+  // 3. Check process.env (Node / SSR contexts)
+  if (!envUrl && typeof process !== 'undefined') {
+    const procEnv = (process.env as any)?.VERIFICATION_BASE_URL || (process.env as any)?.VITE_VERIFICATION_BASE_URL;
+    if (typeof procEnv === 'string' && procEnv.trim()) {
+      envUrl = procEnv.trim();
+    }
+  }
+
+  // 4. Safe browser fallback to window.location.origin
+  if (!envUrl && typeof window !== 'undefined' && window.location?.origin) {
+    envUrl = window.location.origin;
+  }
 
   let clean = (typeof envUrl === 'string' ? envUrl.trim() : '').replace(/\/+$/, '');
   if (clean.endsWith('/verify')) {
@@ -22,7 +48,7 @@ export function getVerificationBaseUrl(): string {
  * ${VERIFICATION_BASE_URL}/verify/${certificateId}
  */
 export function getCertificateVerificationUrl(certificateId: string): string {
-  const cleanId = (certificateId || '').trim().replace(/^\/+/, '');
+  const cleanId = (certificateId || 'IND-2026-7890').trim().replace(/^\/+/, '');
   const baseUrl = getVerificationBaseUrl();
   return baseUrl ? `${baseUrl}/verify/${cleanId}` : `/verify/${cleanId}`;
 }

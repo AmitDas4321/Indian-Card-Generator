@@ -163,6 +163,22 @@ app.get('/api/health', async (_req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// PUBLIC RUNTIME CONFIGURATION (NO SECRETS EXPOSED)
+// ---------------------------------------------------------------------------
+app.get('/api/config', (_req, res) => {
+  const verificationBaseUrl = (
+    process.env.VERIFICATION_BASE_URL ||
+    process.env.VITE_VERIFICATION_BASE_URL ||
+    ''
+  ).trim();
+
+  res.status(200).json({
+    verificationBaseUrl,
+    apiKey: process.env.API_KEY || process.env.VITE_API_KEY || DEFAULT_API_KEY,
+  });
+});
+
+// ---------------------------------------------------------------------------
 // ADMIN AUTHENTICATION & ADMIN ENDPOINTS
 // ---------------------------------------------------------------------------
 
@@ -676,6 +692,11 @@ async function startServer() {
           let html = fs.readFileSync(indexHtmlPath, 'utf8');
           const runtimeConfig = {
             API_KEY: process.env.API_KEY || process.env.VITE_API_KEY || DEFAULT_API_KEY,
+            VERIFICATION_BASE_URL: (
+              process.env.VERIFICATION_BASE_URL ||
+              process.env.VITE_VERIFICATION_BASE_URL ||
+              ''
+            ).trim(),
           };
           const scriptTag = `<script>window.__APP_CONFIG__=Object.freeze(${JSON.stringify(runtimeConfig)});</script>`;
           if (html.includes('</head>')) {

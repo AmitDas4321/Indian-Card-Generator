@@ -79,6 +79,25 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Synchronize runtime server configuration (VERIFICATION_BASE_URL & API_KEY)
+  useEffect(() => {
+    fetch('/api/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((config) => {
+        if (config && typeof window !== 'undefined') {
+          const currentConfig = (window as any).__APP_CONFIG__ || {};
+          (window as any).__APP_CONFIG__ = {
+            ...currentConfig,
+            API_KEY: config.apiKey || currentConfig.API_KEY,
+            VERIFICATION_BASE_URL: config.verificationBaseUrl || currentConfig.VERIFICATION_BASE_URL,
+          };
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not sync runtime config from /api/config:', err);
+      });
+  }, []);
+
   // Fetch initial next sequence preview from Firebase only if not already locked with saved card
   useEffect(() => {
     if (isLocked) return;

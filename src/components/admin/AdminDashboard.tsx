@@ -29,6 +29,7 @@ import {
   fetchAdminCertificates,
   deleteAdminCertificate,
 } from '../../services/adminService';
+import { getCertificateVerificationUrl } from '../../utils/cardRenderer';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -128,7 +129,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCopyVerifyLink = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const url = `${window.location.origin}/verify/${id}`;
+    const url = getCertificateVerificationUrl(id);
     navigator.clipboard.writeText(url);
     setCopiedVerifyId(id);
     setTimeout(() => setCopiedVerifyId(null), 2000);
