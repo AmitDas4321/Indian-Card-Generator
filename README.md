@@ -327,7 +327,6 @@ npm install
 
 ```bash
 cp .env.example .env
-# Edit .env and supply your credentials, ADMIN_PASSWORD, and DATABASE_PROVIDER (firebase | mysql | mongodb)
 ```
 
 ### 4. Start Development Server
