@@ -7,14 +7,48 @@
  * - X-Signature
  */
 
+// Default API signing key and secret (configured in .env.example / server defaults)
+export const DEFAULT_API_KEY = '7f9c2e4a8b1d6f3c9a7e5b2d8f4c1a6e0d3b9c7f2a5e8d1';
+export const DEFAULT_API_SECRET_KEY = 'Q8vN4xZ7pL2mK9rT5wY3cH6sJ1dF8aB0nG4uE7iP2oR9tV6x';
+
 export function getClientApiKey(): string {
-  const envKey = (import.meta as any).env?.VITE_API_KEY || (typeof process !== 'undefined' ? (process.env as any)?.API_KEY : '');
-  return envKey && typeof envKey === 'string' ? envKey.trim() : '';
+  // 1. Check runtime window configuration injected by server (HTML hydration)
+  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__?.API_KEY) {
+    const key = (window as any).__APP_CONFIG__.API_KEY;
+    if (typeof key === 'string' && key.trim()) return key.trim();
+  }
+
+  // 2. Check Vite build-time / runtime environment
+  const envKey =
+    (import.meta as any).env?.VITE_API_KEY ||
+    (typeof process !== 'undefined' ? (process.env as any)?.API_KEY || (process.env as any)?.VITE_API_KEY : '');
+
+  if (envKey && typeof envKey === 'string' && envKey.trim()) {
+    return envKey.trim();
+  }
+
+  // 3. Fallback to standard application default key
+  return DEFAULT_API_KEY;
 }
 
 export function getClientSecretKey(): string {
-  const envSecret = (import.meta as any).env?.VITE_API_SECRET_KEY || (typeof process !== 'undefined' ? (process.env as any)?.API_SECRET_KEY : '');
-  return envSecret && typeof envSecret === 'string' ? envSecret.trim() : '';
+  // 1. Check runtime window configuration (if configured)
+  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__?.API_SECRET_KEY) {
+    const secret = (window as any).__APP_CONFIG__.API_SECRET_KEY;
+    if (typeof secret === 'string' && secret.trim()) return secret.trim();
+  }
+
+  // 2. Check Vite build-time / runtime environment
+  const envSecret =
+    (import.meta as any).env?.VITE_API_SECRET_KEY ||
+    (typeof process !== 'undefined' ? (process.env as any)?.API_SECRET_KEY || (process.env as any)?.VITE_API_SECRET_KEY : '');
+
+  if (envSecret && typeof envSecret === 'string' && envSecret.trim()) {
+    return envSecret.trim();
+  }
+
+  // 3. Fallback to standard application default secret
+  return DEFAULT_API_SECRET_KEY;
 }
 
 /**
