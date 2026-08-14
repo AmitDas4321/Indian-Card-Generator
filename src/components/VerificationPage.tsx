@@ -468,7 +468,7 @@ export const VerificationPage: React.FC<VerificationPageProps> = ({
       </main>
 
       {/* Footer */}
-      <Footer onNavigateAdmin={onNavigateAdmin} />
+      <Footer />
     </div>
   );
 };

@@ -208,7 +208,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer onNavigateAdmin={navigateToAdmin} />
+      <Footer />
     </div>
   );
 }

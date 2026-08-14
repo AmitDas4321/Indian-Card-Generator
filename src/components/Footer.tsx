@@ -1,18 +1,6 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
 
-interface FooterProps {
-  onNavigateAdmin?: () => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
-  const handleAdminClick = (e: React.MouseEvent) => {
-    if (onNavigateAdmin) {
-      e.preventDefault();
-      onNavigateAdmin();
-    }
-  };
-
+export const Footer: React.FC = () => {
   return (
     <footer className="w-full bg-slate-100 dark:bg-[#060b18] border-t border-slate-200 dark:border-[#1d2940] py-4 px-4 mt-8 transition-colors duration-200">
       <div className="max-w-[1080px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 dark:text-[#9aa3b5]">
@@ -39,18 +27,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
             />
             <span>BlueOrbit Devs (www.blueorbitdevs.org)</span>
           </a>
-          <span>•</span>
-          <a
-            id="link-footer-admin"
-            href="/admin"
-            onClick={handleAdminClick}
-            className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-[#ff9800] transition-colors"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Admin</span>
-          </a>
         </div>
       </div>
     </footer>
   );
 };
+
