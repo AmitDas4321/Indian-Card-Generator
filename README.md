@@ -349,18 +349,50 @@ http://localhost:3000/admin
 
 # 🚀 Production Build & Deployment
 
-### Build Application
+### Local Node.js Production Build
 ```bash
 npm run build
-```
-This compiles the Vite frontend and bundles the backend server into `dist/server.cjs`.
-
-### Start Production Server
-```bash
 npm run start
 ```
+This compiles the Vite frontend into `dist/` and bundles the backend server into `dist/server.cjs`.
 
-### Available Scripts
+---
+
+# 🐳 Docker & Container Deployment
+
+A production-grade, multi-stage `Dockerfile` and `docker-compose.yml` are included for isolated and portable deployments.
+
+### 1. Build and Run with Docker
+
+```bash
+# Build the production image (< 180MB footprint)
+docker build -t indian-card-generator .
+
+# Run container with your environment file
+docker run -d \
+  --name indian-card-generator \
+  -p 3000:3000 \
+  --env-file .env \
+  --restart unless-stopped \
+  indian-card-generator
+```
+
+### 2. Run with Docker Compose
+
+```bash
+# Start container in detached mode
+docker compose up -d --build
+
+# View container logs
+docker compose logs -f
+
+# Stop container
+docker compose down
+```
+
+---
+
+# 📜 Available Scripts
 
 | Command | Description |
 | :--- | :--- |

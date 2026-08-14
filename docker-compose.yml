@@ -1,0 +1,47 @@
+# ==============================================================================
+# Docker Compose for Indian Card Generator
+# Run: docker compose up --build -d
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: indian-card-generator:latest
+    container_name: indian-card-generator
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - VERIFICATION_BASE_URL=${VERIFICATION_BASE_URL:-https://indian-card-verify.blueorbitdevs.workers.dev}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      # Database Provider: 'firebase' | 'mysql' | 'mongodb'
+      - DATABASE_PROVIDER=${DATABASE_PROVIDER:-firebase}
+      # Firebase Configuration
+      - FIREBASE_DATABASE_URL=${FIREBASE_DATABASE_URL:-}
+      - FIREBASE_DATABASE_SECRET=${FIREBASE_DATABASE_SECRET:-}
+      # MySQL Configuration
+      - MYSQL_HOST=${MYSQL_HOST:-}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-indian_card}
+      - MYSQL_USER=${MYSQL_USER:-indian_card}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-}
+      # MongoDB Configuration
+      - MONGODB_URI=${MONGODB_URI:-}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-Indian-Card-Generator}
+      # API Security Keys
+      - API_KEY=${API_KEY:-}
+      - API_SECRET_KEY=${API_SECRET_KEY:-}
+    env_file:
+      - path: .env
+        required: false
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
